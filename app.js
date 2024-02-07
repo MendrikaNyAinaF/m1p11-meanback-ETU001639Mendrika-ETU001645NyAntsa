@@ -3,10 +3,21 @@ const router = require('./router/router');
 const express = require('express');
 const app = express()
 const MongoClient = require('mongodb').MongoClient
-const connectionString = 'mongodb+srv://ranjalahynyantsa:c7jt3yoVjNP6vqq6@cluster0.cdwza34.mongodb.net/'
 
 const {parseCrudEntity} = require('./utilities/urlParser')
 const bodyParser = require('body-parser');
+
+const dotenv = require('dotenv');
+const config = require('./config');
+
+dotenv.config();
+
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+
+const envConfig = config[process.env.NODE_ENV];
+
+const connectionString = envConfig.mongoURI;
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -18,7 +29,7 @@ app.use(express.json());
 MongoClient.connect(connectionString, {useUnifiedTopology: true})
     .then(client => {
             console.log('Connected to Database')
-            const db = client.db('mbs-dev')
+            const db = client.db(envConfig.dbName)
             const dbMiddleware = (req, res, next) => {
                 console.log(`DB Middleware for path : ${req.path}`);
                 let entity = parseCrudEntity(req.path);
