@@ -5,7 +5,7 @@ const {register, login} = require('../controller/person');
 const findAllCrudRegex = /crud$/;
 const findOneUpdateDeleteCrudRegex = /crud\/([a-fA-F0-9]+)$/;
 
-const routes = [
+const genericRoute = [
     // generic crud routes
     {
         path: findAllCrudRegex,
@@ -43,4 +43,4 @@ const routes = [
         handler: login
     }
 ]
-exports.routes = () => routes;
+exports.genericRoute = () => genericRoute;
