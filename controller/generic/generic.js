@@ -1,109 +1,67 @@
 const {ObjectId} = require("mongodb");
 const {sendError} = require('../../utilities/response')
+const {crud} = require('../../service/crud')
 const findAll = (req, res) => {
     checkEntity(req, res)
     const db = req.db
 
     const reqBody = req.body
-    let search = {}
-    let page = {}
-    let limit = 10000000
-    let skip = 0
-
-    if (reqBody !== undefined && reqBody !== null && reqBody.search !== undefined && reqBody.search !== null) {
-        search = reqBody.search
-    }
-
-    if (reqBody !== undefined && reqBody !== null && reqBody.page !== undefined && reqBody.page !== null) {
-        page = reqBody.page
-        if (page.size !== undefined && page.size !== null) {
-            limit = parseInt(page.size)
+    crud.findAll(req.entity, db, reqBody).then(genres => {
+            res.send(genres)
         }
-        if (page.number !== undefined && page.number !== null) {
-            skip = parseInt(page.number*10)
-        }
-    }
-
-
-    db.collection(req.entity).find(search).skip(skip).limit(limit).toArray()
-        .then(genres => {
-                res.send(genres)
-            }
-        )
+    )
         .catch(error => sendError(res, error, 500))
 }
 
 const findOne = (req, res) => {
     checkEntity(req, res)
-    const db = req.db
-    const collection = db.collection(req.entity)
-
-    console.log('params id: ', req.params[0])
     let id = req.params[0]
-    collection.findOne({_id: new ObjectId(id)})
-        .then(result => {
+    crud.findOne(req.entity, req.db, id).then(result => {
+        result === null ? sendError(res, 'No document found', 500) :
             res.send(result)
-        })
+    })
         .catch(error => sendError(res, error, 500))
 }
 
 const create = (req, res) => {
     checkEntity(req, res)
-    const db = req.db
-    const collection = db.collection(req.entity)
-    console.log('req.body: ', req.body)
-    collection.insertOne(req.body)
-        .then(result => {
-            // newly created object
-            let object = result.ops[0]
-            res.send(object)
-        })
+    crud.create(req.entity, req.db, req.body).then(result => {
+        // newly created object
+        let object = result.ops[0]
+        res.send(object)
+    })
         .catch(error => sendError(res, error, 500))
 }
 
 const update = (req, res) => {
     checkEntity(req, res)
-    const db = req.db
-    const collection = db.collection(req.entity)
     let id = req.params[0]
-    console.log('req.body: ', req.body, id)
-    collection.findOneAndUpdate({_id: new ObjectId(id)}, {$set: req.body}, {returnDocument: 'after'})
-        .then(result => {
-                // newly created object
-                let object = result.value
-                res.send(object)
-            }
-        )
+
+    crud.update(req.entity, req.db, id).then(result => {
+            // newly created object
+            result==null || result.value === null ? sendError(res, 'No document found', 500) :
+            res.send(result.value)
+        }
+    )
         .catch(error => sendError(res, error, 500))
 }
 
 const deleteOne = (req, res) => {
     checkEntity(req, res)
-    const db = req.db
-    const collection = db.collection(req.entity)
     let id = req.params[0]
     // Find the document before deleting
-    collection
-        .findOne({_id: new ObjectId(id)})
-        .then(foundObject => {
-            if (!foundObject) {
-                return res.status(404).json({error: 'Document not found'});
+    crud.deleteOne(req.entity, req.db, id).then(result => {
+        if (result.deletedCount === 0) {
+            sendError(res, 'No document to delete', 500)
+        }
+        res.send({
+                code: 200,
+                message: "Document deleted",
+                id: id
             }
-
-            // Store the found object
-            const deletedObject = foundObject;
-
-            // Delete the document
-            return collection.deleteOne({_id: new ObjectId(id)})
-                .then(result => {
-                    if (result.deletedCount === 1) {
-                        res.json(deletedObject);
-                    } else {
-                        sendError(res, 'Error deleting document', 500)
-                    }
-                });
-        })
-        .catch(error => sendError(res, error, 500));
+        )
+            .catch(error => sendError(res, error, 500));
+    })
 }
 
 const checkEntity = (req, res) => {
@@ -114,7 +72,6 @@ const checkEntity = (req, res) => {
         })
     }
 }
-
 
 
 exports.generic = {
