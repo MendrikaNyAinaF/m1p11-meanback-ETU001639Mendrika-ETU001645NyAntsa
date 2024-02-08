@@ -18,6 +18,8 @@ const {notProtectedRoutes} = require('./router/notProtectedRoute');
 
 dotenv.config();
 
+const cors = require('cors');
+
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 const envConfig = config[process.env.NODE_ENV];
@@ -30,6 +32,9 @@ app.use(bodyParser.json());
 
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
+
+app.use(cors())
 
 
 MongoClient.connect(connectionString, {useUnifiedTopology: true})
