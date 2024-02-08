@@ -1,4 +1,5 @@
 const {ObjectId} = require("mongodb");
+const {sendError} = require('../../utilities/response')
 const findAll = (req, res) => {
     checkEntity(req, res)
     const db = req.db
@@ -40,8 +41,8 @@ const findOne = (req, res) => {
     console.log('params id: ', req.params[0])
     let id = req.params[0]
     collection.findOne({_id: new ObjectId(id)})
-        .then(genre => {
-            res.send(genre)
+        .then(result => {
+            res.send(result)
         })
         .catch(error => sendError(res, error, 500))
 }
@@ -114,12 +115,7 @@ const checkEntity = (req, res) => {
     }
 }
 
-const sendError = (res, error, code) => {
-    res.send({
-        code: code,
-        message: error
-    })
-}
+
 
 exports.generic = {
     findAll,
