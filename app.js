@@ -42,8 +42,8 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
             console.log('Connected to Database')
             const db = client.db(envConfig.dbName)
 
+            /*middleware to verify token authentification*/
             const verifyToken = (req, res, next) => {
-                notProtectedRoutes()
                 if(notProtectedRoutes().includes(req.path)){
                     next();
                     return;
