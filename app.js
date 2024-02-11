@@ -18,6 +18,8 @@ const {notProtectedRoutes} = require('./router/notProtectedRoute');
 
 dotenv.config();
 
+const cors = require('cors');
+
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 const envConfig = config[process.env.NODE_ENV];
@@ -32,13 +34,16 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
 
+app.use(cors())
+
+
 MongoClient.connect(connectionString, {useUnifiedTopology: true})
     .then(client => {
             console.log('Connected to Database')
             const db = client.db(envConfig.dbName)
 
+            /*middleware to verify token authentification*/
             const verifyToken = (req, res, next) => {
-                notProtectedRoutes()
                 if(notProtectedRoutes().includes(req.path)){
                     next();
                     return;
