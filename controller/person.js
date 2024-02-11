@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
-const {sendError} = require("../utilities/response");
-const {convertObjectId} = require("../utilities/objectId");
+const { sendError } = require("../utilities/response");
+const { convertObjectId } = require("../utilities/objectId");
 const jwt = require('jsonwebtoken');
 
 const register = (req, res) => {
@@ -26,13 +26,23 @@ const login = (req, res) => {
     const user = req.body;
 
     const db = req.db;
-    db.collection('personne').findOne({email: user.email}).then(result => {
+    const person=req.path.split("/")[1]
+    const types={
+        client:"CUSTOMER",
+        employee:"EMP",
+        manager:"ADMIN"
+    }
+    var filter={ email: user.email }
+    if(types[person]) filter["type.code"]=types[person]
+    console.log(filter, person);
+
+    db.collection('personne').findOne(filter).then(result => {
         if (result) {
             if (bcrypt.compareSync(user.password, result.password)) {
-                const token = jwt.sign({id: result._id}, req.envConfig.secretKey, {expiresIn: 86400});
-                res.status(200).send({auth: true, token: token, userId: result._id});
+                const token = jwt.sign({ id: result._id }, req.envConfig.secretKey, { expiresIn: 86400 });
+                res.status(200).send({ auth: true, token: token, userId: result._id });
             } else {
-               sendError(res, 'Login failed', 500)
+                sendError(res, 'Login failed', 500)
             }
         } else {
             sendError(res, 'Login failed: no account matches to the email provided', 500)

@@ -39,9 +39,8 @@ app.use(cors())
 
 MongoClient.connect(connectionString, {useUnifiedTopology: true})
     .then(client => {
-            console.log('Connected to Database')
+            console.log('Connected to Database ',envConfig.dbName)
             const db = client.db(envConfig.dbName)
-
             /*middleware to verify token authentification*/
             const verifyToken = (req, res, next) => {
                 if(notProtectedRoutes().includes(req.path)){
