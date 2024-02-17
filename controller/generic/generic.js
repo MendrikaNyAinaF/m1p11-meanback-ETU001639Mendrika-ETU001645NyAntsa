@@ -36,9 +36,7 @@ const create = (req, res) => {
 const update = (req, res) => {
     checkEntity(req, res)
     let id = req.params[0]
-    const reqBody = req.body
-
-    crud.update(req.entity, req.db, reqBody, id).then(result => {
+    crud.update(req.entity, req.db,req.body, id).then(result => {
             // newly created object
             result==null || result.value === null ? sendError(res, 'No document found', 500) :
             res.send(result.value)
@@ -60,9 +58,8 @@ const deleteOne = (req, res) => {
                 message: "Document deleted",
                 id: id
             }
-        )
-            .catch(error => sendError(res, error, 500));
-    })
+        )         
+    }) .catch(error => sendError(res, error, 500));
 }
 
 const checkEntity = (req, res) => {

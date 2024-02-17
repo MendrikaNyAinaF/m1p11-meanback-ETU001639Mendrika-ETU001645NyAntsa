@@ -63,7 +63,7 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
             };
 
             const dbMiddleware = (req, res, next) => {
-                console.log(`DB Middleware for path : ${req.path}`);
+                console.log(`DB Middleware for path : ${req.method} ${req.path}`);
                 let entity = parseCrudEntity(req.path);
                 req.entity = entity;
                 req.db = db;
