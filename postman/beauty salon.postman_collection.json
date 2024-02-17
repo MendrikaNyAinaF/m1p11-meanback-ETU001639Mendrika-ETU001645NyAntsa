@@ -259,7 +259,7 @@
 										}
 									}
 								},
-								"url": "{{BASE-URL}}/type_depense-crud/65d0cd07cebc7d07f95958e9"
+								"url": "{{BASE-URL}}/type_depense-crud/65d0d9f238be344f3cffb78d"
 							},
 							"response": [
 								{
@@ -683,6 +683,19 @@
 		{
 			"name": "employee section",
 			"item": []
+		},
+		{
+			"name": "common",
+			"item": [
+				{
+					"name": "liste de mode de paiement",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [

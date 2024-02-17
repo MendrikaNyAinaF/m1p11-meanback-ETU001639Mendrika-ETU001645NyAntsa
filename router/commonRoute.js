@@ -1,5 +1,10 @@
+const {appointmentService} = require('../controller/appointment');
 const commonRoute = [
     // common routes
-    //"appointment/:id/payment"
+    {
+        path: /^appointment\/[a-zA-Z0-9]+\/payment$/,
+        method: 'post',
+        handler: appointmentService.payAppointment
+    }
 ]
 exports.commonRoute = () => commonRoute;

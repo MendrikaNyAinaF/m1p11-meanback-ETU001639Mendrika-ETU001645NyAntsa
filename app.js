@@ -67,6 +67,7 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
                 let entity = parseCrudEntity(req.path);
                 req.entity = entity;
                 req.db = db;
+                req.clientdb=client;
                 req.envConfig = envConfig;
                 next();
             }
