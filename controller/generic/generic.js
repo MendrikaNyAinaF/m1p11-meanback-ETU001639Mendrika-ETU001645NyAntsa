@@ -36,8 +36,9 @@ const create = (req, res) => {
 const update = (req, res) => {
     checkEntity(req, res)
     let id = req.params[0]
+    const reqBody = req.body
 
-    crud.update(req.entity, req.db, id).then(result => {
+    crud.update(req.entity, req.db, reqBody, id).then(result => {
             // newly created object
             result==null || result.value === null ? sendError(res, 'No document found', 500) :
             res.send(result.value)
