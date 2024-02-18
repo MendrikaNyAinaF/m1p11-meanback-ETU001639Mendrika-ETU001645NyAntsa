@@ -6,6 +6,7 @@ const findAll = (req, res) => {
     const db = req.db
 
     const reqBody = req.body
+
     crud.findAll(req.entity, db, reqBody).then(genres => {
             res.send(genres)
         }
@@ -77,5 +78,5 @@ exports.generic = {
     findOne,
     create,
     update,
-    deleteOne
+    deleteOne,
 }
