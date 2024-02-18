@@ -5,6 +5,7 @@ const findAll = (entity, db, object) => {
     let page = {}
     let limit = 10000000
     let skip = 0
+    let sort={}
 
     if (object !== undefined && object !== null && object.search !== undefined && object.search !== null) {
         search = object.search
@@ -20,8 +21,11 @@ const findAll = (entity, db, object) => {
         }
     }
 
+    if(object !== undefined && object !== null && object.sort !== undefined && object.sort !== null){
+        sort=object.sort
+    }
 
-    return db.collection(entity).find(search).skip(skip).limit(limit).toArray()
+    return db.collection(entity).find(search).sort(sort).skip(skip).limit(limit).toArray()
 }
 
 const findOne = (entity, db, id) => {

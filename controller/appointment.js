@@ -1,11 +1,12 @@
 const { generateReferencePayment } = require('../service/util')
+const { sendError } = require("../utilities/response");
 const collection = 'rendez_vous'
 
 /* Payment for appointment
 * @param {Object} req (body: mode_paiement), url with id of appointment
 */
 const payAppointment = async (req, res) => {
-     const id = req.params.id;
+     const id = req.path.split("/")[1];
      const db = req.db;
 
      const appointment = await db.collection(collection).findOne({ _id: id });
