@@ -38,5 +38,10 @@ const commonRoute = [
     
 
 
+    {
+        path: "/appointment/:id/update",
+        method: 'put',
+        handler: appointmentServiceCrud.update
+    }
 ]
 exports.commonRoute = () => commonRoute;
