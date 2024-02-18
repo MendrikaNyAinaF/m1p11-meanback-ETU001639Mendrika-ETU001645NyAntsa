@@ -15,7 +15,7 @@ const commonRoute = [
     },
     {
         path: "/appointment/:id/cancel",
-        method: 'put',
+        method: 'delete',
         handler: appointmentServiceCrud.cancel
     }
 ]
