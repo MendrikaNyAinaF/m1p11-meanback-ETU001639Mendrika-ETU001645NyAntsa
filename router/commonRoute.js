@@ -17,6 +17,11 @@ const commonRoute = [
         path: "/appointment/:id/cancel",
         method: 'delete',
         handler: appointmentServiceCrud.cancel
+    },
+    {
+        path: "/appointment/:id/update",
+        method: 'put',
+        handler: appointmentServiceCrud.update
     }
 ]
 exports.commonRoute = () => commonRoute;
