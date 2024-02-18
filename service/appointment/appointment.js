@@ -2,69 +2,57 @@ const {convertObjectId} = require("../../utilities/objectId");
 const {convertToDate} = require("../../utilities/date");
 const {ObjectId} = require('mongodb');
 const {sendError} = require("../../utilities/response");
-
+const {ignore} = require("nodemon/lib/rules");
+const {crud} = require('../../service/crud')
 const create = async (req, res) => {
-    const db = req.db;
-
+    const clientdb = req.clientdb;
     let body = req.body;
-    if (body === undefined || body === null) {
-        res.status(400).send('Body is required');
-        return;
-    } else if (body.client == undefined || body.client == null) {
-        res.status(400).send('Client is required');
-        return;
-    } else if (body.date_heure_debut == undefined || body.date_heure_debut == null) {
-        res.status(400).send('Date and time are required');
-        return;
-    } else if (body.details == undefined || body.details == null) {
-        res.status(400).send('Details are required');
-        return;
-    }
+
+    if (body === undefined || body === null) return sendError(res, 'No body', 500);
+    if (body.appointment === undefined || body.appointment === null) return sendError(res, 'No appointment', 500);
+    if (body.details === undefined || body.details === null) return sendError(res, 'No details', 500);
 
     body = convertObjectId(body);
     body = convertToDate(body);
-    console.log('create appointment', body);
 
-    let appointment = {
-        client: body.client,
-        status: new ObjectId('65c23d803fe8b2bd4b8f7e0d'),
-        date_heure_debut: body.date_heure_debut,
-    }
+    let createdAppointmentId = null;
+    let session = null;
+    session = clientdb.startSession();
+    session.withTransaction(
+        async () => {
+            let result = await crud.create('rendez_vous', req.db, body.appointment);
+            createdAppointmentId = result.ops[0]._id;
 
-    let startDate= new Date(appointment.date_heure_debut);
+            await body.details.map(detail => {
+                    detail.rendez_vous = createdAppointmentId;
+                }
+            )
 
-    let appointmentDetails = body.details
-    // for each details retrieve the service from the database
-    for (let i = 0; i < appointmentDetails.length; i++) {
-        const result = await db.collection('service').findOne({_id: appointmentDetails[i].service});
-        if (result === null) {
-            sendError(res, 'Service not found', 500);
-            return;
+            // await crud.create('rendez_vous_details', req.db, body.details)
+            await req.db.collection('detail_rendez_vous').insertMany(body.details)
         }
-        appointmentDetails[i].service = result;
-        appointmentDetails[i].prix= result.prix;
-        appointmentDetails[i].date_heure_debut= startDate;
-        startDate= new Date(startDate.getTime() + result.duree * 60000);
-        appointmentDetails[i].date_heure_fin= startDate;
-    }
+    ).catch(error => {
+            sendError(res, error, 500)
+        }
+    )
 
-    let sumDuree = 0;
-    let sumPrix = 0;
-    for (let i = 0; i < appointmentDetails.length; i++) {
-        sumDuree += appointmentDetails[i].service.duree;
-        sumPrix += appointmentDetails[i].service.prix;
-    }
-
-    appointment.date_heure_fin= new Date(appointment.date_heure_debut.getTime() + sumDuree * 60000);
-    appointment.prix = sumPrix;
-    appointment.details = appointmentDetails;
-    console.log('appointment', appointment);
-
-    // check availability of the
+    console.log('All', body)
 
     res.send('create appointment');
 }
 
+const cancel = async (req, res) => {
+    const id = req.params.id;
+    const db = req.db;
+    const status = new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")
+    let rendez_vous = await crud.findOne('rendez_vous', db, id)
+    if (rendez_vous === null) return sendError(res, 'No appointment found', 500);
+    rendez_vous.status = status;
+    let result = await crud.update('rendez_vous', db, rendez_vous, id)
+    res.send(result.value)
+}
+
 exports.appointmentServiceCrud = {
-    create
+    create,
+    cancel
 }
