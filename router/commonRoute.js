@@ -16,7 +16,7 @@ const commonRoute = [
     {
         path: /^appointment\/[a-zA-Z0-9]+\/payment$/,
         method: 'post',
-        handler: findCurrentsSpecialOffer
+        handler: appointmentService.payAppointment
     },
     {
         path: "/appointment",
@@ -28,12 +28,18 @@ const commonRoute = [
         method: 'delete',
         handler: appointmentServiceCrud.cancel
     },
+    {
+        path:"/appointment/:id",
+        method:'get',
+        handler:appointmentService.findById
+    },
+
 
     //special offer
     {
         path: "offre_special/actuels",
         method: 'get',
-        handler: appointmentService.payAppointment
+        handler: findCurrentsSpecialOffer
     },
     
 
