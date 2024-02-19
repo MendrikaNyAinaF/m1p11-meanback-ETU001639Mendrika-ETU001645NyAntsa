@@ -2,6 +2,7 @@ const { appointmentService } = require('../controller/appointment');
 const  personService=  require('../controller/person');
 const {findCurrentsSpecialOffer}=require('../controller/specialOffer');
 const {appointmentServiceCrud} = require('../service/appointment/appointment');
+const {clientService} = require("../service/client");
 
 const commonRoute = [
     // common routes
@@ -35,13 +36,15 @@ const commonRoute = [
         method: 'get',
         handler: appointmentService.payAppointment
     },
-    
-
-
     {
         path: "/appointment/:id/update",
         method: 'put',
         handler: appointmentServiceCrud.update
+    },
+    {
+        path: "/client/register",
+        method: 'post',
+        handler: clientService.register
     }
 ]
 exports.commonRoute = () => commonRoute;

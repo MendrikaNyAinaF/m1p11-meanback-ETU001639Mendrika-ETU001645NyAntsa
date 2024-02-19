@@ -38,11 +38,6 @@ const genericRoute = [
         handler: login
     },
     {
-        path: '/client/register',
-        method: 'post',
-        handler: register
-    },
-    {
         path: '/employee/login',
         method: 'post',
         handler: login
