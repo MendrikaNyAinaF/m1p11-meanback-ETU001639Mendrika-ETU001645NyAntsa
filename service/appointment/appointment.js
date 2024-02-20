@@ -70,7 +70,6 @@ const create = async (req, res) => {
         appointment.prix = sumPrice;
         appointment.date_heure_fin = startdate;
 
-
         let session = req.clientdb.startSession();
         session.withTransaction(
             async () => {
@@ -135,92 +134,158 @@ const cancel = async (req, res) => {
 
 const update = async (req, res) => {
     const id = req.params.id;
-    const db = req.db;
-    let body = req.body;
-    if (body === undefined || body === null) return sendError(res, 'No body', 500);
-    if (body.interval === undefined || body.interval === null) return sendError(res, 'No interval', 500);
-    let interval = body.interval;
+    try {
+        let body = req.body
+        body = convertObjectId(body);
+        body = convertToDate(body);
+        if (body === undefined || body === null) return sendError(res, 'No body', 500);
+        let appointment = body.appointment;
+        if (appointment === undefined || appointment === null) return sendError(res, 'No appointment', 500);
+        let details = body.details;
+        if (details === undefined || details === null) return sendError(res, 'No details', 500);
 
-    let appointment = await crud.findOne('rendez_vous', db, id)
-//  add interval to appointment date_heure_debut and date_heure_fin
-    appointment.date_heure_debut = new Date(appointment.date_heure_debut.getTime() + interval);
-    appointment.date_heure_fin = new Date(appointment.date_heure_fin.getTime() + interval);
+        appointment.status = new ObjectId("65c23d803fe8b2bd4b8f7e0d")
 
+        let startdate = new Date(appointment.date_heure_debut);
 
-//     get the details of the appointment
-    let details = await db.collection('detail_rendez_vous').find({rendez_vous: new ObjectId(id)}).toArray()
-//     add interval to the date_heure_debut and date_heure_fin of each detail
-    details.map(detail => {
-            let unit_date_heure_debut = new Date(detail.date_heure_debut);
-            let unit_date_heure_fin = new Date(detail.date_heure_fin);
-            detail.date_heure_debut = new Date(unit_date_heure_debut.getTime() + interval);
-            detail.date_heure_fin = new Date(unit_date_heure_fin.getTime() + interval);
+        let appointmentsDetails = [];
+        let sumPrice = 0;
+
+        for (let detail of details) {
+            let availability = await getAvailability(detail, startdate, req.db);
+            appointmentsDetails.push(availability);
+            startdate = availability.date_heure_fin;
+            sumPrice += availability.prix;
         }
-    )
 
-    await details.map(async detail => {
-            let search_pattern = {
-                "$and": [
-                    {
-                        "$or": [
-                            {
-                                "$and": [
-                                    {
-                                        date_heure_debut: {"$lte": detail.date_heure_debut}
-                                    },
-                                    {
-                                        date_heure_fin: {"$gte": detail.date_heure_debut}
-                                    },
-                                ]
-                            },
-                            {
-                                "$and": [
-                                    {
-                                        date_heure_debut: {"$lte": detail.date_heure_fin}
-                                    },
-                                    {
-                                        date_heure_fin: {"$gte": detail.date_heure_fin}
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        employee: detail.employee
-                    },
-                    {
-                        rendez_vous: {"$ne": new ObjectId(id)}
-                    }
-                ]
+        appointment.prix = sumPrice;
+        appointment.date_heure_fin = startdate;
+
+        let session = req.clientdb.startSession();
+        session.withTransaction(
+            async () => {
+                let result = await crud.update('rendez_vous', req.db, appointment, id);
+                console.log('result', result)
+                let createdAppointmentId = result.value._id;
+                appointmentsDetails.map(detail => {
+                    detail.rendez_vous = createdAppointmentId;
+                    // return req.db.collection('detail_rendez_vous').findOneAndUpdate({_id: detail._id}, {$set: detail}, {returnDocument: 'after'})
+                })
+
+                // delete all details of the appointment
+                await req.db.collection('detail_rendez_vous').deleteMany({rendez_vous: new ObjectId(id)})
+                // insert the new details
+                await req.db.collection('detail_rendez_vous').insertMany(appointmentsDetails)
+
+                // await req.db.collection('detail_rendez_vous').updateMany(appointmentsDetails)
+                console.log('appointmentsDetails', appointment, appointmentsDetails);
+                res.send({
+                    code: 200,
+                    message: "Appointment updated",
+                    data: appointment
+                });
             }
-            let availableDetail = await db.collection('detail_rendez_vous').find(search_pattern).toArray()
-            console.log('availableDetail', availableDetail, availableDetail.length > 0)
-            if (availableDetail.length === 0) {
-                console.log('update detail', appointment, detail)
-                let session = req.clientdb.startSession();
-                session.withTransaction(
-                    async () => {
-                        await crud.update('rendez_vous', db, appointment, id)
-                        await details.map(detail => {
-                                crud.update('detail_rendez_vous', db, detail, detail._id)
-                            }
-                        )
-                        res.send({
-                            code: 200,
-                            message: "Appointment updated",
-                            data: appointment
-                        });
-                    }
-                ).catch(error => {
-                        sendError(res, error, 500)
-                    }
-                )
-            } else {
-                sendError(res, 'Not available', 500)
+        ).catch(error => {
+                throw error
             }
-        }
-    )
+        )
+    } catch (e) {
+        console.log('Error:', e)
+        res.send({
+            code: 500,
+            message: e.message
+        });
+    }
 }
+
+// const update = async (req, res) => {
+//     const id = req.params.id;
+//     const db = req.db;
+//     let body = req.body;
+//     if (body === undefined || body === null) return sendError(res, 'No body', 500);
+//     if (body.interval === undefined || body.interval === null) return sendError(res, 'No interval', 500);
+//     let interval = body.interval;
+//
+//     let appointment = await crud.findOne('rendez_vous', db, id)
+// //  add interval to appointment date_heure_debut and date_heure_fin
+//     appointment.date_heure_debut = new Date(appointment.date_heure_debut.getTime() + interval);
+//     appointment.date_heure_fin = new Date(appointment.date_heure_fin.getTime() + interval);
+//
+//
+// //     get the details of the appointment
+//     let details = await db.collection('detail_rendez_vous').find({rendez_vous: new ObjectId(id)}).toArray()
+// //     add interval to the date_heure_debut and date_heure_fin of each detail
+//     details.map(detail => {
+//             let unit_date_heure_debut = new Date(detail.date_heure_debut);
+//             let unit_date_heure_fin = new Date(detail.date_heure_fin);
+//             detail.date_heure_debut = new Date(unit_date_heure_debut.getTime() + interval);
+//             detail.date_heure_fin = new Date(unit_date_heure_fin.getTime() + interval);
+//         }
+//     )
+//
+//     await details.map(async detail => {
+//             let search_pattern = {
+//                 "$and": [
+//                     {
+//                         "$or": [
+//                             {
+//                                 "$and": [
+//                                     {
+//                                         date_heure_debut: {"$lte": detail.date_heure_debut}
+//                                     },
+//                                     {
+//                                         date_heure_fin: {"$gte": detail.date_heure_debut}
+//                                     },
+//                                 ]
+//                             },
+//                             {
+//                                 "$and": [
+//                                     {
+//                                         date_heure_debut: {"$lte": detail.date_heure_fin}
+//                                     },
+//                                     {
+//                                         date_heure_fin: {"$gte": detail.date_heure_fin}
+//                                     }
+//                                 ]
+//                             }
+//                         ]
+//                     },
+//                     {
+//                         employee: detail.employee
+//                     },
+//                     {
+//                         rendez_vous: {"$ne": new ObjectId(id)}
+//                     }
+//                 ]
+//             }
+//             let availableDetail = await db.collection('detail_rendez_vous').find(search_pattern).toArray()
+//             console.log('availableDetail', availableDetail, availableDetail.length > 0)
+//             if (availableDetail.length === 0) {
+//                 console.log('update detail', appointment, detail)
+//                 let session = req.clientdb.startSession();
+//                 session.withTransaction(
+//                     async () => {
+//                         await crud.update('rendez_vous', db, appointment, id)
+//                         await details.map(detail => {
+//                                 crud.update('detail_rendez_vous', db, detail, detail._id)
+//                             }
+//                         )
+//                         res.send({
+//                             code: 200,
+//                             message: "Appointment updated",
+//                             data: appointment
+//                         });
+//                     }
+//                 ).catch(error => {
+//                         sendError(res, error, 500)
+//                     }
+//                 )
+//             } else {
+//                 sendError(res, 'Not available', 500)
+//             }
+//         }
+//     )
+// }
 
 exports.appointmentServiceCrud = {
     create,
