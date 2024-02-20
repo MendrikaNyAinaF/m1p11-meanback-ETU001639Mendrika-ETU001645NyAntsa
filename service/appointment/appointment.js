@@ -57,7 +57,11 @@ const create = async (req, res) => {
         let details = body.details;
         if (details === undefined || details === null) return sendError(res, 'No details', 500);
 
-        appointment.status = new ObjectId("65c23d803fe8b2bd4b8f7e0d")
+        appointment.status = {
+            "_id": new ObjectId("65c23d803fe8b2bd4b8f7e0d"),
+            "code": "ENC",
+            "nom": "En cours"
+        }
 
         let startdate = new Date(appointment.date_heure_debut);
 
@@ -173,7 +177,11 @@ const update = async (req, res) => {
         let details = body.details;
         if (details === undefined || details === null) return sendError(res, 'No details', 500);
 
-        appointment.status = new ObjectId("65c23d803fe8b2bd4b8f7e0d")
+        appointment.status = {
+            "_id": new ObjectId("65c23d803fe8b2bd4b8f7e0d"),
+            "code": "ENC",
+            "nom": "En cours"
+        }
 
         let startdate = new Date(appointment.date_heure_debut);
 
