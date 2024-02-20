@@ -4,41 +4,122 @@ const {ObjectId} = require('mongodb');
 const {sendError} = require("../../utilities/response");
 const {ignore} = require("nodemon/lib/rules");
 const {crud} = require('../../service/crud')
+const {search_pattern} = require("../../pattern/employeeAppointmentAvailability");
+// const create = async (req, res) => {
+//     const clientdb = req.clientdb;
+//     let body = req.body;
+//
+//     if (body === undefined || body === null) return sendError(res, 'No body', 500);
+//     if (body.appointment === undefined || body.appointment === null) return sendError(res, 'No appointment', 500);
+//     if (body.details === undefined || body.details === null) return sendError(res, 'No details', 500);
+//
+//     body = convertObjectId(body);
+//     body = convertToDate(body);
+//
+//     let createdAppointmentId = null;
+//     let session = null;
+//     session = clientdb.startSession();
+//     session.withTransaction(
+//         async () => {
+//             let result = await crud.create('rendez_vous', req.db, body.appointment);
+//             createdAppointmentId = result.ops[0]._id;
+//
+//             await body.details.map(detail => {
+//                     detail.rendez_vous = createdAppointmentId;
+//                 }
+//             )
+//
+//             // await crud.create('rendez_vous_details', req.db, body.details)
+//             await req.db.collection('detail_rendez_vous').insertMany(body.details)
+//         }
+//     ).catch(error => {
+//             sendError(res, error, 500)
+//         }
+//     )
+//
+//     console.log('All', body)
+//
+//     res.send('create appointment');
+// }
+
 const create = async (req, res) => {
-    const clientdb = req.clientdb;
-    let body = req.body;
+    try {
+        let body = req.body
+        body = convertObjectId(body);
+        body = convertToDate(body);
+        if (body === undefined || body === null) return sendError(res, 'No body', 500);
+        let appointment = body.appointment;
+        if (appointment === undefined || appointment === null) return sendError(res, 'No appointment', 500);
+        let details = body.details;
+        if (details === undefined || details === null) return sendError(res, 'No details', 500);
 
-    if (body === undefined || body === null) return sendError(res, 'No body', 500);
-    if (body.appointment === undefined || body.appointment === null) return sendError(res, 'No appointment', 500);
-    if (body.details === undefined || body.details === null) return sendError(res, 'No details', 500);
+        appointment.status = new ObjectId("65c23d803fe8b2bd4b8f7e0d")
 
-    body = convertObjectId(body);
-    body = convertToDate(body);
+        let startdate = new Date(appointment.date_heure_debut);
 
-    let createdAppointmentId = null;
-    let session = null;
-    session = clientdb.startSession();
-    session.withTransaction(
-        async () => {
-            let result = await crud.create('rendez_vous', req.db, body.appointment);
-            createdAppointmentId = result.ops[0]._id;
+        let appointmentsDetails = [];
+        let sumPrice = 0;
 
-            await body.details.map(detail => {
+        for (let detail of details) {
+            let availability = await getAvailability(detail, startdate, req.db);
+            appointmentsDetails.push(availability);
+            startdate = availability.date_heure_fin;
+            sumPrice += availability.prix;
+        }
+
+        appointment.prix = sumPrice;
+        appointment.date_heure_fin = startdate;
+
+
+        let session = req.clientdb.startSession();
+        session.withTransaction(
+            async () => {
+                let result = await crud.create('rendez_vous', req.db, appointment);
+                let createdAppointmentId = result.ops[0]._id;
+                appointmentsDetails.map(detail => {
                     detail.rendez_vous = createdAppointmentId;
-                }
-            )
+                })
+                await req.db.collection('detail_rendez_vous').insertMany(appointmentsDetails)
+                console.log('appointmentsDetails', appointment, appointmentsDetails);
+                res.send({
+                    code: 200,
+                    message: "Appointment created",
+                    data: appointment
+                });
+            }
+        ).catch(error => {
+                sendError(res, error, 500)
+            }
+        )
+    } catch (e) {
+        console.log('Error:', e)
+        res.send({
+            code: 500,
+            message: e.message
+        });
+    }
 
-            // await crud.create('rendez_vous_details', req.db, body.details)
-            await req.db.collection('detail_rendez_vous').insertMany(body.details)
-        }
-    ).catch(error => {
-            sendError(res, error, 500)
-        }
-    )
+}
 
-    console.log('All', body)
+const getAvailability = async (detail, date_heure_debut, db) => {
+    // get the service
+    const service = await crud.findOne('service', db, detail.service);
+    const enddate = new Date(date_heure_debut.getTime() + (service.duree * 60000));
+//     get the availability of the employee for the date_heure_debut and date_heure_fin
+    let appointments = await db.collection('detail_rendez_vous').find(search_pattern(date_heure_debut, enddate, detail)).toArray()
+    if (appointments.length !== 0) {
+        throw new Error('Not available')
+    }
 
-    res.send('create appointment');
+    let appointment = {
+        date_heure_debut: date_heure_debut,
+        date_heure_fin: enddate,
+        employee: detail.employee,
+        service: detail.service,
+        prix: service.prix,
+    }
+
+    return appointment
 }
 
 const cancel = async (req, res) => {
