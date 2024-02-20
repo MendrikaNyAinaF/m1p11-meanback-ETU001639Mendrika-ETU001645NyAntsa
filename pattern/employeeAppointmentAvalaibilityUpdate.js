@@ -36,11 +36,11 @@ const search_pattern = (date_heure_debut, enddate, detail, rendez_vous) => {
             },
             {
                 rendez_vous: {
-                    "$ne": new ObjectId("rendez_vous")
+                    "$ne": rendez_vous
                 }
             }
         ]
     }
 }
 
-exports.search_pattern = search_pattern;
+exports.search_pattern_update = search_pattern;

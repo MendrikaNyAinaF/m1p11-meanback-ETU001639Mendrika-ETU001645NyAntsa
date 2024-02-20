@@ -5,6 +5,10 @@ const {sendError} = require("../../utilities/response");
 const {ignore} = require("nodemon/lib/rules");
 const {crud} = require('../../service/crud')
 const {search_pattern} = require("../../pattern/employeeAppointmentAvailability");
+const {search_pattern_update} = require("../../pattern/employeeAppointmentAvalaibilityUpdate");
+
+
+let selectedEmployees = [];
 // const create = async (req, res) => {
 //     const clientdb = req.clientdb;
 //     let body = req.body;
@@ -59,6 +63,7 @@ const create = async (req, res) => {
 
         let appointmentsDetails = [];
         let sumPrice = 0;
+        selectedEmployees = [];
 
         for (let detail of details) {
             let availability = await getAvailability(detail, startdate, req.db);
@@ -79,7 +84,6 @@ const create = async (req, res) => {
                     detail.rendez_vous = createdAppointmentId;
                 })
                 await req.db.collection('detail_rendez_vous').insertMany(appointmentsDetails)
-                console.log('appointmentsDetails', appointment, appointmentsDetails);
                 res.send({
                     code: 200,
                     message: "Appointment created",
@@ -100,12 +104,37 @@ const create = async (req, res) => {
 
 }
 
-const getAvailability = async (detail, date_heure_debut, db) => {
+const getAvailableEmployee = async (date_heure_debut, enddate, db, avoidHimself = false, rendez_vous_id) => {
+    const clients = await db.collection("personne").find({
+        'type._id': new ObjectId("65c220963fe8b2bd4b8f7d78")
+    }).toArray()
+    console.log('clients', clients)
+    let detail = {};
+    for (let client of clients) {
+        detail.employee = client._id;
+        let detail_rendez_vous = await db.collection('detail_rendez_vous').find(avoidHimself === false ? search_pattern(date_heure_debut, enddate, detail) : search_pattern_update(date_heure_debut, enddate, detail, rendez_vous_id)).toArray()
+        if (detail_rendez_vous.length === 0 && selectedEmployees.indexOf(client._id) === -1) {
+            selectedEmployees.push(client._id);
+            return client._id;
+        }
+    }
+    return null;
+}
+
+const getAvailability = async (detail, date_heure_debut, db, avoidHimself = false, rendez_vous_id) => {
     // get the service
     const service = await crud.findOne('service', db, detail.service);
     const enddate = new Date(date_heure_debut.getTime() + (service.duree * 60000));
+//     set automatic employee if not provided
+    if (detail.employee === undefined || detail.employee === null) {
+        detail.employee = await getAvailableEmployee(date_heure_debut, enddate, db, avoidHimself, rendez_vous_id)
+        console.log('employee', detail.employee)
+        if (detail.employee === null) {
+            throw new Error('No employee available')
+        }
+    }
 //     get the availability of the employee for the date_heure_debut and date_heure_fin
-    let appointments = await db.collection('detail_rendez_vous').find(search_pattern(date_heure_debut, enddate, detail)).toArray()
+    let appointments = await db.collection('detail_rendez_vous').find(avoidHimself === false ? search_pattern(date_heure_debut, enddate, detail) : search_pattern_update(date_heure_debut, enddate, detail, rendez_vous_id)).toArray()
     if (appointments.length !== 0) {
         throw new Error('Not available')
     }
@@ -150,9 +179,10 @@ const update = async (req, res) => {
 
         let appointmentsDetails = [];
         let sumPrice = 0;
+        selectedEmployees = [];
 
         for (let detail of details) {
-            let availability = await getAvailability(detail, startdate, req.db);
+            let availability = await getAvailability(detail, startdate, req.db, true, new ObjectId(id));
             appointmentsDetails.push(availability);
             startdate = availability.date_heure_fin;
             sumPrice += availability.prix;
@@ -165,7 +195,6 @@ const update = async (req, res) => {
         session.withTransaction(
             async () => {
                 let result = await crud.update('rendez_vous', req.db, appointment, id);
-                console.log('result', result)
                 let createdAppointmentId = result.value._id;
                 appointmentsDetails.map(detail => {
                     detail.rendez_vous = createdAppointmentId;
@@ -178,7 +207,6 @@ const update = async (req, res) => {
                 await req.db.collection('detail_rendez_vous').insertMany(appointmentsDetails)
 
                 // await req.db.collection('detail_rendez_vous').updateMany(appointmentsDetails)
-                console.log('appointmentsDetails', appointment, appointmentsDetails);
                 res.send({
                     code: 200,
                     message: "Appointment updated",
