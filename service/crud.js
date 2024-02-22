@@ -12,6 +12,8 @@ const findAll = (entity, db, object) => {
     object = convertObjectId(object)
     object = convertToDate(object)
 
+    console.log('object', object, JSON.stringify(object))
+
     if (object !== undefined && object !== null && object.search !== undefined && object.search !== null) {
         search = object.search
     }
@@ -29,7 +31,7 @@ const findAll = (entity, db, object) => {
     if(object !== undefined && object !== null && object.sort !== undefined && object.sort !== null){
         sort=object.sort
     }
-    console.log('all', JSON.stringify(search), skip, limit)
+    console.log('all', JSON.stringify(search), search, skip, limit)
 
 
     return db.collection(entity).find(search).sort(sort).skip(skip).limit(limit).toArray()
