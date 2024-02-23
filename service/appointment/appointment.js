@@ -100,10 +100,7 @@ const create = async (req, res) => {
         )
     } catch (e) {
         console.log('Error:', e)
-        res.send({
-            code: 500,
-            message: e.message
-        });
+        sendError(res, e.message, 500)
     }
 
 }

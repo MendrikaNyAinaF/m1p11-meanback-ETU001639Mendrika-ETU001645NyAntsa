@@ -93,8 +93,6 @@ const findById = async (req, res) => {
      }).catch((err) => {
           sendError(res, err, 500);
      });
-
-
 }
 
 exports.appointmentService = {
