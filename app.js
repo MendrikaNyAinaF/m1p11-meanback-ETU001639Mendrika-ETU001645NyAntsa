@@ -1,5 +1,6 @@
 const router = require('./router/route');
 
+
 const express = require('express');
 const app = express()
 const MongoClient = require('mongodb').MongoClient
@@ -19,6 +20,7 @@ const {notProtectedRoutes} = require('./router/notProtectedRoute');
 dotenv.config();
 
 const cors = require('cors');
+const {addStatutAppointmentMiddlewareForClient} = require("./middleware/appointment");
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -74,6 +76,7 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
 
             app.use(verifyToken);
             app.use(dbMiddleware);
+            app.get("/rendez_vous-crud", addStatutAppointmentMiddlewareForClient)
 
             router.routes().map(route => {
                 // use the middle for everything

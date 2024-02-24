@@ -328,5 +328,5 @@ const update = async (req, res) => {
 exports.appointmentServiceCrud = {
     create,
     cancel,
-    update
+    update,
 }
