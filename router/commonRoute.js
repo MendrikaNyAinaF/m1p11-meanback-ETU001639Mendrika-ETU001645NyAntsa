@@ -1,9 +1,9 @@
 const { appointmentService } = require('../controller/appointment');
 const  personService=  require('../controller/person');
 const {findCurrentsSpecialOffer}=require('../controller/specialOffer');
-const {appointmentServiceCrud} = require('../service/appointment/appointment');
 const {clientService} = require("../service/client");
 const {employeeService} = require("../service/employee/employee");
+const {appointmentServiceCrud} = require("../service/appointment/appointment");
 
 const commonRoute = [
     // common routes
@@ -57,6 +57,11 @@ const commonRoute = [
         path: "/employees/favourites/:clientId",
         method: 'get',
         handler: employeeService.getFavouriteEmployees
+    },
+    {
+        path: "/rendez_vous-crud/employee",
+        method: 'get',
+        handler: appointmentServiceCrud.findAllAppointmentForEmployee
     }
 ]
 exports.commonRoute = () => commonRoute;

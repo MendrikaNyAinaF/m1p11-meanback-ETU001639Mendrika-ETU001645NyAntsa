@@ -236,6 +236,49 @@ const update = async (req, res) => {
     }
 }
 
+const findAllAppointmentForEmployee = async (req, res) => {
+    // get criteria from query parameters
+    const base64Criteria = req.query.criteria
+    let criteria
+    try {
+        criteria = base64Criteria!==undefined ? JSON.parse(Buffer.from(base64Criteria, 'base64').toString('ascii')) : req.body
+    } catch (e) {
+        //     do nothing
+        criteria = req.body
+    }
+    criteria = convertObjectId(criteria);
+    criteria = convertToDate(criteria);
+    console.log('criteria', criteria)
+    const rendez_vous_details = await crud.findAll("detail_rendez_vous", req.db, criteria)
+//     check if has value
+    if (rendez_vous_details === undefined && rendez_vous_details === null && rendez_vous_details.length === 0) {
+        res.send({
+                code: 404,
+                message: "No appointment found",
+                data: []
+            }
+        )
+    }
+
+    for (let rendez_vous_detail of rendez_vous_details) {
+        let rendez_vous = await crud.findOne("rendez_vous", req.db, rendez_vous_detail.rendez_vous)
+        console.log('rendez_vous', rendez_vous)
+        if(rendez_vous!==null && rendez_vous._id===new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")){
+        //     delete the rendez_vous_detail from the list
+            rendez_vous_details.splice(rendez_vous_details.indexOf(rendez_vous_detail), 1)
+        }else{
+            rendez_vous_detail.rendez_vous = rendez_vous
+        }
+    }
+
+    res.send({
+            code: 200,
+            message: "Appointments found",
+            data: rendez_vous_details
+        }
+    )
+}
+
 // const update = async (req, res) => {
 //     const id = req.params.id;
 //     const db = req.db;
@@ -329,4 +372,5 @@ exports.appointmentServiceCrud = {
     create,
     cancel,
     update,
+    findAllAppointmentForEmployee
 }

@@ -5,15 +5,15 @@ const findAll = (req, res) => {
     checkEntity(req, res)
     const db = req.db
 
-    const reqBody = req.body
 
     // get criteria from query parameters
     const base64Criteria = req.query.criteria
     let criteria = {}
     try {
-        criteria = base64Criteria ? JSON.parse(Buffer.from(base64Criteria, 'base64').toString('ascii')) : {}
+        criteria = base64Criteria ? JSON.parse(Buffer.from(base64Criteria, 'base64').toString('ascii')) : req.body
     } catch (e) {
         //     do nothing
+        criteria= req.body
     }
 
     crud.findAll(req.entity, db, criteria).then(genres => {
