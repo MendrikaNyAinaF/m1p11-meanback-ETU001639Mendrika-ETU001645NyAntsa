@@ -4,7 +4,11 @@ const getFavouriteEmployees = async (req, res) => {
     const db = req.db;
     const preferences = await db.collection('preference').find({client: new ObjectId(clientId)}).toArray()
     console.log('preferences: ', preferences)
-    const employees = preferences.map(preference => preference.employe.toString());
+    const employees = preferences.map(preference => {
+        if (preference.employe !== null) {
+            return preference.employe.toString()
+        }
+    });
     console.log('employees: ', employees)
 //     get all employees
     const allEmployees = await db.collection("personne").find({
