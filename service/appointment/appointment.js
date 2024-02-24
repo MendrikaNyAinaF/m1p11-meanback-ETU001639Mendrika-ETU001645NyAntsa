@@ -148,6 +148,11 @@ const getAvailability = async (detail, date_heure_debut, db, avoidHimself = fals
         prix: service.prix,
     }
 
+    // check if date_heure_debut and date_heure_fin are not in the weekend
+    if (date_heure_debut.getDay() === 0 || date_heure_debut.getDay() === 6) {
+        throw new Error('Weekend')
+    }
+
     return appointment
 }
 
