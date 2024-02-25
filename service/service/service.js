@@ -4,18 +4,18 @@ const getFavouriteServices = async (req, res) => {
     const clientId = req.params.clientId;
     const db = req.db;
     const preferences = await db.collection('preference').find({client: new ObjectId(clientId)}).toArray()
-    console.log('preferences: ', preferences)
+    // console.log('preferences: ', preferences)
     const services = preferences.map(preference => {
         if (preference.service !== null) {
             return preference.service.toString()
         }
     });
-    console.log('services: ', services)
+    // console.log('services: ', services)
 //     get all services
     const allServices = await db.collection("service").find({}).toArray()
-    console.log('allServices: ', allServices)
+    // console.log('allServices: ', allServices)
     const favouriteServices = allServices.filter(service => services.includes(service._id.toString()))
-    console.log('favouriteServices: ', favouriteServices)
+    // console.log('favouriteServices: ', favouriteServices)
 // add favourite property to each employee
     favouriteServices.forEach(service => {
             service.favourite = true

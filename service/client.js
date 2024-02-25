@@ -4,10 +4,10 @@ const {crud} = require("./crud");
 const {sendError} = require("../utilities/response");
 const register = async (req, res) => {
     let client = req.body;
-    console.log('client: ', client)
+    // console.log('client: ', client)
     client = convertObjectId(client);
 
-    console.log('client: ', client)
+    // console.log('client: ', client)
 
     let hashedPassword = bcrypt.hashSync(client.password, 10);
     client.password = hashedPassword;
@@ -23,7 +23,7 @@ const register = async (req, res) => {
     // set status to active 1
     client.status = 1;
 
-    console.log('client: ', client)
+    // console.log('client: ', client)
     const db = req.db;
     db.collection('personne').insertOne(client).then(result => {
         // newly created object

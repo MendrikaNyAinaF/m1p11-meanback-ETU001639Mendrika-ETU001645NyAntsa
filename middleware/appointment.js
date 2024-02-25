@@ -9,7 +9,9 @@ const addStatutAppointmentMiddlewareForClient = async (req, res, next) => {
     }
     criteria.search['$and'].push({
         status: {
-            "$ne": new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")
+            "$ne": {
+                "$oid": "65c23d5d3fe8b2bd4b8f7e0c"
+            }
         }
     })
     req.query.criteria = btoa(JSON.stringify(criteria))

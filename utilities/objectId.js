@@ -44,6 +44,6 @@ const inputObject = {
 };
 
 const convertedObject = convertObjectId(inputObject);
-console.log(convertedObject);
+// console.log(convertedObject);
 
 exports.convertObjectId = convertObjectId;

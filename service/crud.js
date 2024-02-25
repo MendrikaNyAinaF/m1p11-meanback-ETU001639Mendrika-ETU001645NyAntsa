@@ -9,6 +9,7 @@ const dictionary = {
     employe : 'personne',
     service: 'service',
     client: 'personne',
+    status : 'statut_rendez_vous',
 }
 
 const findAll = (entity, db, object) => {
@@ -21,7 +22,7 @@ const findAll = (entity, db, object) => {
     object = convertObjectId(object)
     object = convertToDate(object)
 
-    console.log('object', object, JSON.stringify(object))
+    // console.log('object', object, JSON.stringify(object))
 
     if (object !== undefined && object !== null && object.search !== undefined && object.search !== null) {
         search = object.search
@@ -40,7 +41,7 @@ const findAll = (entity, db, object) => {
     if (object !== undefined && object !== null && object.sort !== undefined && object.sort !== null) {
         sort = object.sort
     }
-    console.log('all', JSON.stringify(search), search, skip, limit)
+    console.log('all', JSON.stringify(search), search, skip, limit, search["$and"])
 
 
     return db.collection(entity).find(search).sort(sort).skip(skip).limit(limit).toArray()
@@ -73,14 +74,14 @@ const addObjectReferenced = async (data, db) => {
 //     loop though the data, for each loop loop thought the object and check if it's of the type ObjectId and if it is, go to the database and get the object and add it to the object
     for (let i = 0; i < data.length; i++) {
         for (const key in data[i]) {
-            console.log('key', key, data[i][key] )
+            // console.log('key', key, data[i][key] )
             // check if key is in the dictionary and if it is, replace it with the value in the dictionary
             let keyRealValue = key;
             if (dictionary[key] !== undefined) {
-                console.log('keyRealValue', keyRealValue, dictionary[key])
+                // console.log('keyRealValue', keyRealValue, dictionary[key])
                 keyRealValue = dictionary[key]
             }
-            if (data[i][key] instanceof ObjectId) {
+            if (data[i][key] instanceof ObjectId && key !== '_id') {
                 const findOneResponse = await db.collection(keyRealValue).findOne({_id: data[i][key]})
                 data[i][key] = findOneResponse
             }
