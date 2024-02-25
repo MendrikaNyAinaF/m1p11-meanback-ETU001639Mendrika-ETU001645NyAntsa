@@ -57,11 +57,7 @@ const create = async (req, res) => {
         let details = body.details;
         if (details === undefined || details === null) return sendError(res, 'No details', 500);
 
-        appointment.status = {
-            "_id": new ObjectId("65c23d803fe8b2bd4b8f7e0d"),
-            "code": "ENC",
-            "nom": "En cours"
-        }
+        appointment.status = new ObjectId("65c23d803fe8b2bd4b8f7e0d");
 
         let startdate = new Date(appointment.date_heure_debut);
 
@@ -109,7 +105,7 @@ const getAvailableEmployee = async (date_heure_debut, enddate, db, avoidHimself 
     const clients = await db.collection("personne").find({
         'type._id': new ObjectId("65c220963fe8b2bd4b8f7d78")
     }).toArray()
-    console.log('clients', clients)
+    // console.log('clients', clients)
     let detail = {};
     for (let client of clients) {
         detail.employee = client._id;
@@ -129,7 +125,7 @@ const getAvailability = async (detail, date_heure_debut, db, avoidHimself = fals
 //     set automatic employee if not provided
     if (detail.employee === undefined || detail.employee === null) {
         detail.employee = await getAvailableEmployee(date_heure_debut, enddate, db, avoidHimself, rendez_vous_id)
-        console.log('employee', detail.employee)
+        // console.log('employee', detail.employee)
         if (detail.employee === null) {
             throw new Error('No employee available')
         }
@@ -179,11 +175,7 @@ const update = async (req, res) => {
         let details = body.details;
         if (details === undefined || details === null) return sendError(res, 'No details', 500);
 
-        appointment.status = {
-            "_id": new ObjectId("65c23d803fe8b2bd4b8f7e0d"),
-            "code": "ENC",
-            "nom": "En cours"
-        }
+        appointment.status = new ObjectId("65c23d803fe8b2bd4b8f7e0d")
 
         let startdate = new Date(appointment.date_heure_debut);
 
@@ -245,7 +237,7 @@ const findAllAppointmentForEmployee = async (req, res) => {
     }
     criteria = convertObjectId(criteria);
     criteria = convertToDate(criteria);
-    console.log('criteria', criteria)
+    // console.log('criteria', criteria)
     const rendez_vous_details = await crud.findAll("detail_rendez_vous", req.db, criteria)
 //     check if has value
     if (rendez_vous_details === undefined && rendez_vous_details === null && rendez_vous_details.length === 0) {
@@ -259,7 +251,7 @@ const findAllAppointmentForEmployee = async (req, res) => {
 
     for (let rendez_vous_detail of rendez_vous_details) {
         let rendez_vous = await crud.findOne("rendez_vous", req.db, rendez_vous_detail.rendez_vous)
-        console.log('rendez_vous', rendez_vous)
+        // console.log('rendez_vous', rendez_vous)
         if(rendez_vous!==null && rendez_vous._id===new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")){
         //     delete the rendez_vous_detail from the list
             rendez_vous_details.splice(rendez_vous_details.indexOf(rendez_vous_detail), 1)

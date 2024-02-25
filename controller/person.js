@@ -11,7 +11,7 @@ const register = (req, res) => {
     user.password = hashedPassword;
 
     user = convertObjectId(user)
-    console.log('user: ', user)
+    // console.log('user: ', user)
 
     const db = req.db;
     db.collection('personne').insertOne(user).then(result => {
@@ -34,7 +34,7 @@ const login = (req, res) => {
     }
     var filter = { email: user.email }
     if (types[person]) filter["type.code"] = types[person]
-    console.log(filter, person);
+    // console.log(filter, person);
 
     db.collection('personne').findOne(filter).then(result => {
         if (result) {

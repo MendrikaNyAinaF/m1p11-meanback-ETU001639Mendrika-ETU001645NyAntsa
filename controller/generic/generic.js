@@ -16,6 +16,7 @@ const findAll = async (req, res) => {
         criteria= req.body
     }
 
+
     const data = await crud.findAll(req.entity, db, criteria);
     res.send({
         code: 200,
