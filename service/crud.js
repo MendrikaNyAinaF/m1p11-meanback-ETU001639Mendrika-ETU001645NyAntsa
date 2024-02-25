@@ -2,12 +2,21 @@ const {sendError} = require("../utilities/response");
 const {ObjectId} = require("mongodb");
 const {convertObjectId} = require("../utilities/objectId");
 const {convertToDate} = require("../utilities/date");
+
+
+const dictionary = {
+    employee: 'personne',
+    employe : 'personne',
+    service: 'service',
+    client: 'personne',
+}
+
 const findAll = (entity, db, object) => {
     let search = {}
     let page = {}
     let limit = 10000000
     let skip = 0
-    let sort={}
+    let sort = {}
 
     object = convertObjectId(object)
     object = convertToDate(object)
@@ -28,8 +37,8 @@ const findAll = (entity, db, object) => {
         }
     }
 
-    if(object !== undefined && object !== null && object.sort !== undefined && object.sort !== null){
-        sort=object.sort
+    if (object !== undefined && object !== null && object.sort !== undefined && object.sort !== null) {
+        sort = object.sort
     }
     console.log('all', JSON.stringify(search), search, skip, limit)
 
@@ -57,10 +66,35 @@ const deleteOne = (entity, db, id) => {
     return db.collection(entity).deleteOne({_id: new ObjectId(id)})
 }
 
+const addObjectReferenced = async (data, db) => {
+    if (data === undefined || data === null) {
+        return Promise.resolve(data)
+    }
+//     loop though the data, for each loop loop thought the object and check if it's of the type ObjectId and if it is, go to the database and get the object and add it to the object
+    for (let i = 0; i < data.length; i++) {
+        for (const key in data[i]) {
+            console.log('key', key, data[i][key] )
+            // check if key is in the dictionary and if it is, replace it with the value in the dictionary
+            let keyRealValue = key;
+            if (dictionary[key] !== undefined) {
+                console.log('keyRealValue', keyRealValue, dictionary[key])
+                keyRealValue = dictionary[key]
+            }
+            if (data[i][key] instanceof ObjectId) {
+                const findOneResponse = await db.collection(keyRealValue).findOne({_id: data[i][key]})
+                data[i][key] = findOneResponse
+            }
+        }
+    }
+    return Promise.resolve(data)
+}
+
+
 exports.crud = {
     findAll,
     findOne,
     create,
     update,
-    deleteOne
+    deleteOne,
+    addObjectReferenced
 }

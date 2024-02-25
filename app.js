@@ -13,7 +13,7 @@ const config = require('./config');
 
 const jwt = require('jsonwebtoken');
 
-const {sendError} =require('./utilities/response')
+const {sendError} = require('./utilities/response')
 
 const {notProtectedRoutes} = require('./router/notProtectedRoute');
 
@@ -41,11 +41,11 @@ app.use(cors())
 
 MongoClient.connect(connectionString, {useUnifiedTopology: true})
     .then(client => {
-            console.log('Connected to Database ',envConfig.dbName)
+            console.log('Connected to Database ', envConfig.dbName)
             const db = client.db(envConfig.dbName)
             /*middleware to verify token authentification*/
             const verifyToken = (req, res, next) => {
-                if(notProtectedRoutes().includes(req.path)){
+                if (notProtectedRoutes().includes(req.path)) {
                     next();
                     return;
                 }
@@ -69,7 +69,7 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
                 let entity = parseCrudEntity(req.path);
                 req.entity = entity;
                 req.db = db;
-                req.clientdb=client;
+                req.clientdb = client;
                 req.envConfig = envConfig;
                 next();
             }
@@ -77,6 +77,7 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
             app.use(verifyToken);
             app.use(dbMiddleware);
             app.get("/rendez_vous-crud", addStatutAppointmentMiddlewareForClient)
+            app.get("/rendez_vous-crud/employee", addStatutAppointmentMiddlewareForClient)
 
             router.routes().map(route => {
                 // use the middle for everything

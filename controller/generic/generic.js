@@ -1,7 +1,7 @@
 const {ObjectId} = require("mongodb");
 const {sendError} = require('../../utilities/response')
 const {crud} = require('../../service/crud')
-const findAll = (req, res) => {
+const findAll = async (req, res) => {
     checkEntity(req, res)
     const db = req.db
 
@@ -16,21 +16,26 @@ const findAll = (req, res) => {
         criteria= req.body
     }
 
-    crud.findAll(req.entity, db, criteria).then(genres => {
-            res.send(genres)
-        }
-    )
-        .catch(error => sendError(res, error, 500))
+    const data = await crud.findAll(req.entity, db, criteria);
+    res.send({
+        code: 200,
+        message: "List of " + req.entity,
+        data: await crud.addObjectReferenced(data,req.db)
+    })
 }
 
-const findOne = (req, res) => {
+const findOne = async (req, res) => {
     checkEntity(req, res)
     let id = req.params[0]
-    crud.findOne(req.entity, req.db, id).then(result => {
-        result === null ? sendError(res, 'No document found', 500) :
-            res.send(result)
+    const findOne = await crud.findOne(req.entity, req.db, id)
+    if (findOne === null) {
+        sendError(res, 'No document found', 500)
+    }
+    res.send({
+        code: 200,
+        message: "Document found",
+        data: await crud.addObjectReferenced([findOne],req.db)
     })
-        .catch(error => sendError(res, error, 500))
 }
 
 const create = (req, res) => {

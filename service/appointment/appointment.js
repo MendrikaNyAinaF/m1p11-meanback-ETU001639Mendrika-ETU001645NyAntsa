@@ -268,10 +268,12 @@ const findAllAppointmentForEmployee = async (req, res) => {
         }
     }
 
+    const referencedObject = await crud.addObjectReferenced(rendez_vous_details, req.db)
+
     res.send({
             code: 200,
             message: "Appointments found",
-            data: rendez_vous_details
+            data: referencedObject
         }
     )
 }
