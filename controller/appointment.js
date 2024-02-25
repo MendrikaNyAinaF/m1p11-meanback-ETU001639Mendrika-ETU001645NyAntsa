@@ -52,7 +52,7 @@ const findById = async (req, res) => {
      // console.log(id);
      db.collection(collection).findOne({ _id: new ObjectId(id) }).then(async (result) => {
           if (result == null) return sendError(res, 'Appointment not found', 404);
-          const services = await db.collection('rendez_vous_details').aggregate([
+          const services = await db.collection('detail_rendez_vous').aggregate([
                {
                  $match: {
                     rendez_vous: new ObjectId( result._id )
@@ -84,7 +84,7 @@ const findById = async (req, res) => {
                  $project: {
                    "service":"$service",
                    "employee":"$employee",
-                   _id: 0
+                   _id: "$_id",
                  }
                }
              ]).toArray();
