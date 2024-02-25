@@ -17,7 +17,7 @@ const commonRoute = [
 
     //appointment
     {
-        path: /^appointment\/[a-zA-Z0-9]+\/payment$/,
+        path: "/appointment/:id/pay",
         method: 'post',
         handler: appointmentService.payAppointment
     },

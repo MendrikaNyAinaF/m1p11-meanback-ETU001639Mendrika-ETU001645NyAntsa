@@ -81,7 +81,7 @@ const addObjectReferenced = async (data, db) => {
                 // console.log('keyRealValue', keyRealValue, dictionary[key])
                 keyRealValue = dictionary[key]
             }
-            if (data[i][key] instanceof ObjectId && key !== '_id') {
+            if (data[i][key] instanceof ObjectId && key!== '_id') {
                 const findOneResponse = await db.collection(keyRealValue).findOne({_id: data[i][key]})
                 data[i][key] = findOneResponse
             }
