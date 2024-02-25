@@ -1,10 +1,11 @@
 const { checkFormatHour, compareHours } = require("../utilities/formatCheck")
 const { sendError } = require("../utilities/response");
+const { ObjectId } = require('mongodb');
 
 /* employe/id/schedule post */
 const insertNewSchedule = async (req, res) => {
      const db = req.db;
-     const id = req.path.split("/")[1];
+     const id = req.params.id;
 
      const body = req.body;
      if (!checkFormatHour(body.heure_debut) || !checkFormatHour(body.heure_fin)) sendError(res, "Format de heure non valide", 500)
@@ -16,12 +17,16 @@ const insertNewSchedule = async (req, res) => {
           session.startTransaction();
 
           // get the current schedule and modify it
-          const currentSchedule = await db.collection("horaire_travail").findOne({ date_fin: null, employee: id });
-          await db.updateOne({_id:currentSchedule._id},{$set:{date_fin:date}});
+          const currentSchedule = await db.collection("horaire_travail").find({ date_fin: null, employee: new ObjectId(id) }).toArray();
+          if (currentSchedule != null && currentSchedule.length > 0) {
+               for (const schedule of currentSchedule) {
+                    await db.collection("horaire_travail").updateOne({ _id: new ObjectId(schedule._id) }, { $set: { date_fin: date } });
+               }
+          }
 
           //insert the new schedule
           const newSchedule = {
-               employee: id,
+               employee: new ObjectId(id),
                heure_debut: body.heure_debut,
                heure_fin: body.heure_fin,
                date_debut: date,
@@ -33,13 +38,44 @@ const insertNewSchedule = async (req, res) => {
           res.send({
                code: 201,
                message: "Le nouvel horaire a été enregistré avec succès",
-               data: result
+               data: newSchedule
           });
      } catch (error) {
+          console.log(error);
           sendError(res, error, 500)
      }
-
 }
-module.exports = {
-     insertNewSchedule
+const findCurrentSchedule = async (req, res) => {
+     const db = req.db;
+     const id = req.params.id;
+     try {
+          const schedule = await db.collection("horaire_travail").find({ employee: new ObjectId(id), date_fin: null }).toArray();
+          res.send({
+               code: 200,
+               message: "Les horaires de travail ont été récupérés avec succès",
+               data: schedule.length > 0 ? schedule[0] : null
+          });
+     } catch (error) {
+          console.log(error);
+          sendError(res, error, 500)
+     }
+}
+const findSchedule = async (req, res) => {
+     const db = req.db;
+     const id = req.params.id;
+     try {
+          const schedule = await db.collection("horaire_travail").find({ employee: new ObjectId(id) }).sort({ date_debut: -1 })
+               .toArray();
+          res.send({
+               code: 200,
+               message: "Les horaires de travail ont été récupérés avec succès",
+               data: schedule
+          });
+     } catch (error) {
+          console.log(error);
+          sendError(res, error, 500)
+     }
+}
+exports.employeeController = {
+     insertNewSchedule, findCurrentSchedule, findSchedule
 }

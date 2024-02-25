@@ -6,7 +6,7 @@ const notProtectedRoutes = [
     "/manager/login",
     "/client/login",
     "/client/register",
-    "employee/login",
-    "mode_paiement-crud"
+    "/employee/login",
+    "/mode_paiement-crud"
 ]
 exports.notProtectedRoutes = () => notProtectedRoutes;

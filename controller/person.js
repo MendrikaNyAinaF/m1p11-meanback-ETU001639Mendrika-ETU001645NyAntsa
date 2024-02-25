@@ -38,6 +38,7 @@ const login = (req, res) => {
 
     db.collection('personne').findOne(filter).then(result => {
         if (result) {
+            console.log('result: ', user.password, result.password)
             if (bcrypt.compareSync(user.password, result.password)) {
                 const token = jwt.sign({ id: result._id }, req.envConfig.secretKey, { expiresIn: 86400 });
                 res.status(200).send({
@@ -52,7 +53,7 @@ const login = (req, res) => {
                     }
                 });
             } else {
-                sendError(res, 'Login failed', 500)
+                sendError(res, 'Login failed: wrong password', 500)
             }
         } else {
             sendError(res, 'Login failed: no account matches to the email provided', 500)

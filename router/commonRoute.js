@@ -1,11 +1,12 @@
-const {appointmentService} = require('../controller/appointment');
+const { appointmentService } = require('../controller/appointment');
 const personService = require('../controller/person');
-const {findCurrentsSpecialOffer, createSpecialOffer} = require('../controller/specialOffer');
-const {clientService} = require("../service/client");
-const {employeeService} = require("../service/employee/employee");
-const {appointmentServiceCrud} = require("../service/appointment/appointment");
-const {serviceService} = require("../service/service/service");
-const {notificationController} = require("../controller/notification");
+const { findCurrentsSpecialOffer, createSpecialOffer } = require('../controller/specialOffer');
+const { clientService } = require("../service/client");
+const { employeeService } = require("../service/employee/employee");
+const { employeeController } = require("../controller/employee");
+const { appointmentServiceCrud } = require("../service/appointment/appointment");
+const { serviceService } = require("../service/service/service");
+const { notificationController } = require("../controller/notification");
 
 const commonRoute = [
     // common routes
@@ -42,6 +43,11 @@ const commonRoute = [
         method: 'put',
         handler: appointmentServiceCrud.update
     },
+    {
+        path: "/rendez_vous-crud/employee",
+        method: 'get',
+        handler: appointmentServiceCrud.findAllAppointmentForEmployee
+    },
 
     //special offer
     {
@@ -54,7 +60,7 @@ const commonRoute = [
         method: 'post',
         handler: createSpecialOffer
     },
-    
+
     //personne
     {
         path: "/client/register",
@@ -67,20 +73,31 @@ const commonRoute = [
         handler: employeeService.getFavouriteEmployees
     },
     {
-        path: "/rendez_vous-crud/employee",
-        method: 'get',
-        handler: appointmentServiceCrud.findAllAppointmentForEmployee
-    }, {
         path: "/services/favourites/:clientId",
         method: 'get',
         handler: serviceService.getFavouriteServices
 
-    },{
+    }, {
         path: "/preference/update/:clientId",
         method: 'put',
         handler: serviceService.updateStatus
     },
-
+    //horaire
+    {
+        path: "/employee/:id/schedule",
+        method: 'post',
+        handler: employeeController.insertNewSchedule
+    },
+    {
+        path: "/employee/:id/schedule/current",
+        method: 'get',
+        handler: employeeController.findCurrentSchedule
+    },
+    {
+        path: "/employee/:id/schedule",
+        method: 'get',
+        handler: employeeController.findSchedule
+    },
     //notification
     {
         path: "/notification",
