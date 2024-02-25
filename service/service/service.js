@@ -76,7 +76,8 @@ const updateStatus = async (req, res) => {
         }).then(result => {
             res.send({
                 code:200,
-                message: "Preference saved"
+                message: "Preference saved",
+                data: true
             })
         })
     } else {
@@ -85,6 +86,7 @@ const updateStatus = async (req, res) => {
                 res.send({
                     code: 200,
                     message: "Preference deleted",
+                    data : false
                 })
             }
         )
