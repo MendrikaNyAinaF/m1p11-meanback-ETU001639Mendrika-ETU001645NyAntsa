@@ -6,7 +6,6 @@ function convertToDate(obj) {
     if ('$date' in obj) {
       return new Date(obj['$date']);
     }
-
     // Recursively process nested objects or arrays
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -17,7 +16,6 @@ function convertToDate(obj) {
     // Recursively process each element in an array
     obj = obj.map(convertToDate);
   }
-
   return obj;
 }
 
