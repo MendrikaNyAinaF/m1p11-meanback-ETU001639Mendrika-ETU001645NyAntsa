@@ -8,28 +8,27 @@ const collection = 'rendez_vous'
 * @param {Object} req (body: mode_paiement), url with id of appointment
 */
 const payAppointment = async (req, res) => {
-     const id = req.path.split("/")[1];
+     const id = req.params.id;
      const db = req.db;
-
-     const appointment = await db.collection(collection).findOne({ _id: new ObjectId(id) });
-     if (appointment.status.code === 'TEP') return res.status(400).send('Payment already done');
-
-     const mode_paiement = await db.collection('mode_paiement').findOne({ code: req.body.mode_paiement });
-     if (!mode_paiement) return sendError(res, 'Status not found', 500);
-
-     const status = await db.collection('status').findOne({ code: 'TEP' });
-     if (!status) return sendError(res, 'Status not found', 500);
-
+     const objectId = new ObjectId(id);
      try {
+          const appointment = await db.collection(collection).findOne({ _id: objectId });
+          if (appointment.status!=null && appointment.status.code === 'TEP') sendError(res,'Payment already done', 500);
+
+          const mode_paiement = await db.collection('mode_paiement').findOne({ _id: ObjectId(req.body.mode_paiement) });
+          if (!mode_paiement) return sendError(res, 'Mode paiement not found', 404);
+
+          const status = await db.collection('statut_rendez_vous').findOne({ code: 'TEP' });
+          if (!status) return sendError(res, 'Status not found', 404);
           const session = req.clientdb.startSession();
           session.startTransaction();
           /* change the status of the appointment to "terminé et payé" */
-          await db.collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: { status: status } });
+          await db.collection(collection).updateOne({ _id: objectId }, { $set: { status: status } });
 
           /* save the payment */
           await db.collection('paiement').insertOne(
                {
-                    rendez_vous: id,
+                    rendez_vous: objectId,
                     date_heure_paiement: new Date(),
                     mode_paiement: mode_paiement,
                     reference: generateReferencePayment(mode_paiement)
@@ -38,8 +37,7 @@ const payAppointment = async (req, res) => {
           session.commitTransaction();
           res.send({
                code: 201,
-               message: "Le paiement a été effectué avec succès",
-               data: result
+               message: "Le paiement a été effectué avec succès"
           });
      } catch (error) {
           sendError(res, error, 500)
@@ -54,40 +52,40 @@ const findById = async (req, res) => {
           if (result == null) return sendError(res, 'Appointment not found', 404);
           const services = await db.collection('detail_rendez_vous').aggregate([
                {
-                 $match: {
-                    rendez_vous: new ObjectId( result._id )
-                 }
+                    $match: {
+                         rendez_vous: new ObjectId(result._id)
+                    }
                },
                {
-                 $lookup: {
-                   from: "service",
-                   localField: "service",
-                   foreignField: "_id",
-                   as: "service"
-                 }
+                    $lookup: {
+                         from: "service",
+                         localField: "service",
+                         foreignField: "_id",
+                         as: "service"
+                    }
                },
                {
-                 $unwind: "$service"
+                    $unwind: "$service"
                },
                {
-                 $lookup: {
-                   from: "personne",
-                   localField: "employee",
-                   foreignField: "_id",
-                   as: "employee"
-                 }
+                    $lookup: {
+                         from: "personne",
+                         localField: "employee",
+                         foreignField: "_id",
+                         as: "employee"
+                    }
                },
                {
-                 $unwind: "$employee"
+                    $unwind: "$employee"
                },
                {
-                 $project: {
-                   "service":"$service",
-                   "employee":"$employee",
-                   _id: "$_id",
-                 }
+                    $project: {
+                         "service": "$service",
+                         "employee": "$employee",
+                         _id: "$_id",
+                    }
                }
-             ]).toArray();
+          ]).toArray();
           result.services = services;
           res.status(200).json(result);
      }).catch((err) => {
