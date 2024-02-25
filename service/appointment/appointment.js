@@ -1,11 +1,11 @@
-const {convertObjectId} = require("../../utilities/objectId");
-const {convertToDate} = require("../../utilities/date");
-const {ObjectId} = require('mongodb');
-const {sendError} = require("../../utilities/response");
-const {ignore} = require("nodemon/lib/rules");
-const {crud} = require('../../service/crud')
-const {search_pattern} = require("../../pattern/employeeAppointmentAvailability");
-const {search_pattern_update} = require("../../pattern/employeeAppointmentAvalaibilityUpdate");
+const { convertObjectId } = require("../../utilities/objectId");
+const { convertToDate } = require("../../utilities/date");
+const { ObjectId } = require('mongodb');
+const { sendError } = require("../../utilities/response");
+const { ignore } = require("nodemon/lib/rules");
+const { crud } = require('../../service/crud')
+const { search_pattern } = require("../../pattern/employeeAppointmentAvailability");
+const { search_pattern_update } = require("../../pattern/employeeAppointmentAvalaibilityUpdate");
 
 
 let selectedEmployees = [];
@@ -91,8 +91,8 @@ const create = async (req, res) => {
                 });
             }
         ).catch(error => {
-                sendError(res, error, 500)
-            }
+            sendError(res, error, 500)
+        }
         )
     } catch (e) {
         console.log('Error:', e)
@@ -122,7 +122,7 @@ const getAvailability = async (detail, date_heure_debut, db, avoidHimself = fals
     // get the service
     const service = await crud.findOne('service', db, detail.service);
     const enddate = new Date(date_heure_debut.getTime() + (service.duree * 60000));
-//     set automatic employee if not provided
+    //     set automatic employee if not provided
     if (detail.employee === undefined || detail.employee === null) {
         detail.employee = await getAvailableEmployee(date_heure_debut, enddate, db, avoidHimself, rendez_vous_id)
         // console.log('employee', detail.employee)
@@ -130,7 +130,7 @@ const getAvailability = async (detail, date_heure_debut, db, avoidHimself = fals
             throw new Error('No employee available')
         }
     }
-//     get the availability of the employee for the date_heure_debut and date_heure_fin
+    //     get the availability of the employee for the date_heure_debut and date_heure_fin
     let appointments = await db.collection('detail_rendez_vous').find(avoidHimself === false ? search_pattern(date_heure_debut, enddate, detail) : search_pattern_update(date_heure_debut, enddate, detail, rendez_vous_id)).toArray()
     if (appointments.length !== 0) {
         throw new Error('Not available')
@@ -204,7 +204,7 @@ const update = async (req, res) => {
                 })
 
                 // delete all details of the appointment
-                await req.db.collection('detail_rendez_vous').deleteMany({rendez_vous: new ObjectId(id)})
+                await req.db.collection('detail_rendez_vous').deleteMany({ rendez_vous: new ObjectId(id) })
                 // insert the new details
                 await req.db.collection('detail_rendez_vous').insertMany(appointmentsDetails)
 
@@ -216,8 +216,8 @@ const update = async (req, res) => {
                 });
             }
         ).catch(error => {
-                throw error
-            }
+            throw error
+        }
         )
     } catch (e) {
         console.log('Error:', e)
@@ -230,7 +230,7 @@ const findAllAppointmentForEmployee = async (req, res) => {
     const base64Criteria = req.query.criteria
     let criteria
     try {
-        criteria = base64Criteria!==undefined ? JSON.parse(Buffer.from(base64Criteria, 'base64').toString('ascii')) : req.body
+        criteria = base64Criteria !== undefined ? JSON.parse(Buffer.from(base64Criteria, 'base64').toString('ascii')) : req.body
     } catch (e) {
         //     do nothing
         criteria = req.body
@@ -239,23 +239,23 @@ const findAllAppointmentForEmployee = async (req, res) => {
     criteria = convertToDate(criteria);
     // console.log('criteria', criteria)
     const rendez_vous_details = await crud.findAll("detail_rendez_vous", req.db, criteria)
-//     check if has value
+    //     check if has value
     if (rendez_vous_details === undefined && rendez_vous_details === null && rendez_vous_details.length === 0) {
         res.send({
-                code: 404,
-                message: "No appointment found",
-                data: []
-            }
+            code: 404,
+            message: "No appointment found",
+            data: []
+        }
         )
     }
 
     for (let rendez_vous_detail of rendez_vous_details) {
         let rendez_vous = await crud.findOne("rendez_vous", req.db, rendez_vous_detail.rendez_vous)
         // console.log('rendez_vous', rendez_vous)
-        if(rendez_vous!==null && rendez_vous._id===new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")){
-        //     delete the rendez_vous_detail from the list
+        if (rendez_vous !== null && rendez_vous._id === new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")) {
+            //     delete the rendez_vous_detail from the list
             rendez_vous_details.splice(rendez_vous_details.indexOf(rendez_vous_detail), 1)
-        }else{
+        } else {
             rendez_vous_detail.rendez_vous = rendez_vous
         }
     }
@@ -263,10 +263,10 @@ const findAllAppointmentForEmployee = async (req, res) => {
     const referencedObject = await crud.addObjectReferenced(rendez_vous_details, req.db)
 
     res.send({
-            code: 200,
-            message: "Appointments found",
-            data: referencedObject
-        }
+        code: 200,
+        message: "Appointments found",
+        data: referencedObject
+    }
     )
 }
 
@@ -359,10 +359,58 @@ const findAllAppointmentForEmployee = async (req, res) => {
 //     )
 // }
 
+const findById = (id, db) => {
+    return db.collection('rendez_vous').findOne({ _id: new ObjectId(id) }).then(async (result) => {
+        if (result == null) return null;
+        const client=await db.collection('personne').findOne({_id:new ObjectId(result.client)})
+        result.client=client;
+        const services = await db.collection('detail_rendez_vous').aggregate([
+            {
+                $match: {
+                    rendez_vous: new ObjectId(result._id)
+                }
+            },
+            {
+                $lookup: {
+                    from: "service",
+                    localField: "service",
+                    foreignField: "_id",
+                    as: "service"
+                }
+            },
+            {
+                $unwind: "$service"
+            },
+            {
+                $lookup: {
+                    from: "personne",
+                    localField: "employee",
+                    foreignField: "_id",
+                    as: "employee"
+                }
+            },
+            {
+                $unwind: "$employee"
+            },
+            {
+                $project: {
+                    "service": "$service",
+                    "employee": "$employee",
+                    _id: "$_id",
+                }
+            }
+        ]).toArray();
+        result.services = services;
+        return result;
+    }).catch((err) => {
+        throw err;
+    });
 
+}
 exports.appointmentServiceCrud = {
     create,
     cancel,
     update,
-    findAllAppointmentForEmployee
+    findAllAppointmentForEmployee,
+    findById
 }

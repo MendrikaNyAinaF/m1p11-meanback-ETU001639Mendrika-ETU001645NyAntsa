@@ -1,10 +1,11 @@
 const {appointmentService} = require('../controller/appointment');
 const personService = require('../controller/person');
-const {findCurrentsSpecialOffer} = require('../controller/specialOffer');
+const {findCurrentsSpecialOffer, createSpecialOffer} = require('../controller/specialOffer');
 const {clientService} = require("../service/client");
 const {employeeService} = require("../service/employee/employee");
 const {appointmentServiceCrud} = require("../service/appointment/appointment");
 const {serviceService} = require("../service/service/service");
+const {notificationController} = require("../controller/notification");
 
 const commonRoute = [
     // common routes
@@ -36,19 +37,25 @@ const commonRoute = [
         method: 'get',
         handler: appointmentService.findById
     },
-
-
-    //special offer
-    {
-        path: "offre_special/actuels",
-        method: 'get',
-        handler: findCurrentsSpecialOffer
-    },
     {
         path: "/appointment/:id/update",
         method: 'put',
         handler: appointmentServiceCrud.update
     },
+
+    //special offer
+    {
+        path: "/offre_special/actuels",
+        method: 'get',
+        handler: findCurrentsSpecialOffer
+    },
+    {
+        path: "/offre_special",
+        method: 'post',
+        handler: createSpecialOffer
+    },
+    
+    //personne
     {
         path: "/client/register",
         method: 'post',
@@ -72,6 +79,13 @@ const commonRoute = [
         path: "/preference/update/:clientId",
         method: 'put',
         handler: serviceService.updateStatus
+    },
+
+    //notification
+    {
+        path: "/notification",
+        method: 'get',
+        handler: notificationController.findAllNotificationByClient
     }
 ]
 exports.commonRoute = () => commonRoute;

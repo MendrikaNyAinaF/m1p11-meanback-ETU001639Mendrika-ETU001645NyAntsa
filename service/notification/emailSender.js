@@ -1,9 +1,9 @@
-const nodemailer=required("nodemailer");
+const nodemailer=require("nodemailer");
 const config=require("../../config");
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 const envConfig = config[process.env.NODE_ENV];
-const configMail = envConfig.configMail;
+const configMail = envConfig.configGmail;
 
 /**le format de l'email
  * {
@@ -31,6 +31,6 @@ const sendEmail=(receiver, subject, text)=>{
          }
      });
 }
-module.exports={
+exports.emailSender={
      sendEmail
 }

@@ -1,7 +1,7 @@
 const { generateReferencePayment } = require('../service/util')
 const { sendError } = require("../utilities/response");
 const { ObjectId } = require('mongodb');
-
+const {notificationService} = require('../service/notification/notification')
 const collection = 'rendez_vous'
 
 /* Payment for appointment
@@ -35,6 +35,11 @@ const payAppointment = async (req, res) => {
                });
 
           session.commitTransaction();
+          try{
+               notificationService.paymentNotificationAndEmail(id,mode_paiement.nom,db)
+          }catch(error){
+               console.error(error);
+          }
           res.send({
                code: 201,
                message: "Le paiement a été effectué avec succès"
