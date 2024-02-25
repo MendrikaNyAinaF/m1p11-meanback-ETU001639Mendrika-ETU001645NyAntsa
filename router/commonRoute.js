@@ -8,6 +8,9 @@ const { appointmentServiceCrud } = require("../service/appointment/appointment")
 const { serviceService } = require("../service/service/service");
 const { notificationController } = require("../controller/notification");
 const {expenseController}=require("../controller/expense");
+const {statController}=require("../controller/stat");
+
+
 const commonRoute = [
     // common routes
     //person
@@ -109,6 +112,12 @@ const commonRoute = [
         path: "/depense",
         method: 'post',
         handler: expenseController.insertDepense
+    },
+    //stat
+    {
+        path:"/stat/appointment/counter",
+        method:'get',
+        handler:statController.numberOfAppointment
     }
 ]
 exports.commonRoute = () => commonRoute;
