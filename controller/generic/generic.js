@@ -35,7 +35,7 @@ const findOne = async (req, res) => {
     res.send({
         code: 200,
         message: "Document found",
-        data: await crud.addObjectReferenced([findOne],req.db)
+        data: (await crud.addObjectReferenced([findOne],req.db))[0]
     })
 }
 
