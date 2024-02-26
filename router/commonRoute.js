@@ -71,6 +71,11 @@ const commonRoute = [
         handler: clientService.register
     },
     {
+        path:"/client/:id",
+        method:'put',
+        handler:personService.modifyInfoClient
+    },
+    {
         path: "/employees/favourites/:clientId",
         method: 'get',
         handler: employeeService.getFavouriteEmployees
@@ -85,6 +90,7 @@ const commonRoute = [
         method: 'put',
         handler: serviceService.updateStatus
     },
+
     //horaire
     {
         path: "/employee/:id/schedule",

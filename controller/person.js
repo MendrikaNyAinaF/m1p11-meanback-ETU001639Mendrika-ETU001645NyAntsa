@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const { sendError } = require("../utilities/response");
 const { convertObjectId } = require("../utilities/objectId");
 const jwt = require('jsonwebtoken');
+const { ObjectId } = require('mongodb');
 
 const register = (req, res) => {
     let user = req.body;
@@ -77,8 +78,22 @@ const findOne = (req, res) => {
     })
         .catch(error => sendError(res, error, 500))
 }
+const modifyInfoClient=async(req, res) => {
+    let id = req.params.id
+    let user = req.body;
+    const db = req.db;
+    delete user.password;
+    delete user.type;
+    const client=await db.collection('personne').findOne({ _id: new ObjectId(id) });
+    if(client==null || client.type.code!="CUSTOMER") sendError(res, 'No client found', 500);
+    db.collection('personne').updateOne({ _id:new ObjectId(id)}, { $set: user }).then(result => {
+        res.send({code:200, data:result, message:"modification"}  )
+    }).catch(error => sendError(res, error, 500));
+}
+
 module.exports = {
     register,
     login,
-    findOne
+    findOne,
+    modifyInfoClient
 }
