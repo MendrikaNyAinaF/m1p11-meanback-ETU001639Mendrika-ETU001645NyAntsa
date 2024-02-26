@@ -83,7 +83,7 @@ MongoClient.connect(connectionString, { useUnifiedTopology: true })
         app.use(verifyToken);
         app.use(dbMiddleware);
         app.get("/rendez_vous-crud", addStatutAppointmentMiddlewareForClient)
-        app.get("/rendez_vous-crud/employee", addStatutAppointmentMiddlewareForClient)
+        // app.get("/rendez_vous-crud/employee", addStatutAppointmentMiddlewareForClient)
 
         router.routes().map(route => {
             // use the middle for everything
