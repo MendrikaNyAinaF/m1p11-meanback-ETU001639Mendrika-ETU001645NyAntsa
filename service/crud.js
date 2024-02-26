@@ -67,6 +67,9 @@ const deleteOne = (entity, db, id) => {
     return db.collection(entity).deleteOne({_id: new ObjectId(id)})
 }
 
+// recursive addObjectReferenced so all the child are processed until no ObjectId value remains
+
+
 const addObjectReferenced = async (data, db) => {
     if (data === undefined || data === null) {
         return Promise.resolve(data)
@@ -83,7 +86,7 @@ const addObjectReferenced = async (data, db) => {
             }
             if (data[i][key] instanceof ObjectId && key!== '_id') {
                 const findOneResponse = await db.collection(keyRealValue).findOne({_id: data[i][key]})
-                data[i][key] = findOneResponse
+                data[i][key] = (await addObjectReferenced([findOneResponse],db))[0]
             }
         }
     }
