@@ -98,6 +98,26 @@ MongoClient.connect(connectionString, {useUnifiedTopology: true})
             } catch (e) {
                 console.error('Error occurred:', error);
             }
+            //le rappel des rendze vous
+            const cron10h = '0 10 * * *';
+            const cron2min = '*/30 * * * * *';
+            cron.schedule(cron10h, async () => {
+                notificationService.rappel(db);
+            });
+            app.use(verifyToken);
+            app.use(dbMiddleware);
+            app.get("/rendez_vous-crud", addStatutAppointmentMiddlewareForClient)
+            // app.get("/rendez_vous-crud/employee", addStatutAppointmentMiddlewareForClient)
+
+            router.routes().map(route => {
+                // use the middle for everything
+                app[route.method](route.path, route.handler);
+            })
+
+            app.listen(3000, () => {
+                    console.log('Server is listening on port 3000');
+                }
+            );
         }
     )
     .catch(error => console.error(error))

@@ -24,14 +24,13 @@ const createSpecialOffer = (req, res) => {
           delete offre._id
           db.collection("offre_speciale").insertOne(offre).then((result) => {
                try {
-                    notificationService.specialOfferNotification(result, db);
+                    notificationService.specialOfferNotification(offre, db);
                } catch (e) {
                     console.error(e);
                }
                res.status(201).send({code:200, message:"Offre spécial créée",data:result});
           }).catch(error => sendError(res, error, 500));
-     })
-     
+     }) 
 }
 
 module.exports = {

@@ -13,7 +13,13 @@ const findAllNotificationByClient = async (req, res) => {
      const { page, client } = criteria;
      const db = req.db;
      const notifications = await notificationService.findAllNotificationByClient(page, client, db);
-     res.status(200).json(notifications);
+     res.status(200).json(
+          {
+               code: 200,
+               message: "List of notifications",
+               data: notifications
+          }
+          );
 }
 
 exports.notificationController = {

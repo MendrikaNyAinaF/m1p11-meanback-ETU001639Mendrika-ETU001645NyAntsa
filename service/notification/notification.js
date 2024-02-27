@@ -2,6 +2,7 @@ const { sendError } = require("../../utilities/response");
 const { appointmentServiceCrud } = require("../appointment/appointment");
 const { adminService } = require("../admin");
 const { emailSender } = require("./emailSender");
+const { ObjectId } = require('mongodb');
 
 const insertNotification = async (notification, db) => {
      return db.collection('notification').insertOne(notification);
@@ -72,7 +73,7 @@ const specialOfferNotification = async (specialOffer, db) => {
           if (type_notification == null) sendError(res, 'Type notification not found', 404);
 
           const notification = {
-               contenu: `${specialOffer.description}`,
+               contenu: `Nous avons une offre spécial du ${specialOffer.date_heure_debut} au ${specialOffer.date_heure_fin}. ${specialOffer.description}`,
                client: null,
                date_creation: new Date(),
                type_notification: type_notification,
@@ -84,7 +85,7 @@ const specialOfferNotification = async (specialOffer, db) => {
      }
 }
 
-const appointmentNotification = async (appointment) => {
+const appointmentNotification = async (appointment, db) => {
      try {
           const type_notification = await db.collection('type_notification').findOne({ code: "RPL" });
 
@@ -94,12 +95,12 @@ const appointmentNotification = async (appointment) => {
           const subject = "Rappel rendez-vous";
           const notification = {
                contenu: content,
-               client: appointment.client._id,
+               client: appointment.client,
                date_creation: new Date(),
                type_notification: type_notification
           }
           insertNotification(notification, db);
-          emailSender.sendEmail(appointment.client.email, subject, content);
+          await emailSender.sendEmail(appointment.client.email, subject, content);
      } catch (e) {
           console.error(e);
      }
@@ -107,26 +108,27 @@ const appointmentNotification = async (appointment) => {
 
 
 /**Rappel des rendez vous client en cours */
-const rappel=async(db) => {
-     console.log("ca passe ici");
+const rappel = async (db) => {
+     // console.log("ca passe ici");
      try {
           let demain = new Date();
           demain.setDate(demain.getDate() + 1); // Incrémente la date d'un jour
 
-          const appointments=await db.collection('appointment').find(
+          const appointments = await db.collection('rendez_vous').find(
                {
-                         $expr: {
-                              $eq: [
-                                   { $dateToString: { format: "%Y-%m-%d", date: "$date_heure_debut" } },
-                                   { $dateToString: { format: "%Y-%m-%d", date: demain } }
-                              ]
-                         }
-                    
+                    $expr: {
+                         $eq: [
+                              { $dateToString: { format: "%Y-%m-%d", date: "$date_heure_debut" } },
+                              { $dateToString: { format: "%Y-%m-%d", date: demain } }
+                         ]
+                    }
+
                }
           ).toArray();
 
+          if (appointments == null) return;
           for (appointment of appointments) {
-               appointmentNotification(appointment);
+               appointmentNotification(appointment, db);
           }
      } catch (e) {
           console.error(e);
