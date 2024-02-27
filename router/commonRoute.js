@@ -76,6 +76,11 @@ const commonRoute = [
         handler:personService.modifyInfoClient
     },
     {
+        path:"/admin/:id",
+        method:'put',
+        handler:personService.modifyInfoAdmin
+    },
+    {
         path: "/employees/favourites/:clientId",
         method: 'get',
         handler: employeeService.getFavouriteEmployees

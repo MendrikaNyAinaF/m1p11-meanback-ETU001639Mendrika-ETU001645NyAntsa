@@ -71,29 +71,41 @@ const findOne = (req, res) => {
         delete result.password;
 
         //TO DO order by date debut desc
-         db.collection("horaire_travail").find({employee:result._id}).then((result2)=>{
-            result.horaires=result2;
+        db.collection("horaire_travail").find({ employee: result._id }).then((result2) => {
+            result.horaires = result2;
             res.send(result)
-         }).catch(error => sendError(res, error, 500))        
+        }).catch(error => sendError(res, error, 500))
     })
         .catch(error => sendError(res, error, 500))
 }
-const modifyInfoClient=async(req, res) => {
+const modifyInfoClient = async (req, res) => {
     let id = req.params.id
     let user = req.body;
     const db = req.db;
     delete user.password;
     delete user.type;
-    const client=await db.collection('personne').findOne({ _id: new ObjectId(id) });
-    if(client==null || client.type.code!="CUSTOMER") sendError(res, 'No client found', 500);
-    db.collection('personne').updateOne({ _id:new ObjectId(id)}, { $set: user }).then(result => {
-        res.send({code:200, data:result, message:"modification"}  )
+    const client = await db.collection('personne').findOne({ _id: new ObjectId(id) });
+    if (client == null || client.type.code != "CUSTOMER") sendError(res, 'No client found', 500);
+    db.collection('personne').updateOne({ _id: new ObjectId(id) }, { $set: user }).then(result => {
+        res.send({ code: 200, data: result, message: "modification" })
     }).catch(error => sendError(res, error, 500));
 }
-
+const modifyInfoAdmin = async (req, res) => {
+    let id = req.params.id
+    let user = req.body;
+    const db = req.db;
+    delete user.password;
+    delete user.type;
+    const admin = await db.collection('personne').findOne({ _id: new ObjectId(id) });
+    if (admin == null || admin.type.code != "ADMIN") sendError(res, 'No admin found', 500);
+    db.collection('personne').updateOne({ _id: new ObjectId(id) }, { $set: user }).then(result => {
+        res.send({ code: 200, data: result, message: "modification" })
+    }).catch(error => sendError(res, error, 500));
+}
 module.exports = {
     register,
     login,
     findOne,
-    modifyInfoClient
+    modifyInfoClient,
+    modifyInfoAdmin
 }

@@ -76,7 +76,7 @@ MongoClient.connect(connectionString, { useUnifiedTopology: true })
         }
         //le rappel des rendze vous
         const cron10h = '0 10 * * *';
-        const cron2min = '*/10 * * * * *';
+        const cron2min = '*/30 * * * * *';
         cron.schedule(cron10h, async () => {
             notificationService.rappel(db);
         });

@@ -85,7 +85,7 @@ const specialOfferNotification = async (specialOffer, db) => {
      }
 }
 
-const appointmentNotification = async (appointment) => {
+const appointmentNotification = async (appointment, db) => {
      try {
           const type_notification = await db.collection('type_notification').findOne({ code: "RPL" });
 
@@ -95,12 +95,12 @@ const appointmentNotification = async (appointment) => {
           const subject = "Rappel rendez-vous";
           const notification = {
                contenu: content,
-               client: appointment.client._id,
+               client: appointment.client,
                date_creation: new Date(),
                type_notification: type_notification
           }
           insertNotification(notification, db);
-          emailSender.sendEmail(appointment.client.email, subject, content);
+          await emailSender.sendEmail(appointment.client.email, subject, content);
      } catch (e) {
           console.error(e);
      }
@@ -109,12 +109,12 @@ const appointmentNotification = async (appointment) => {
 
 /**Rappel des rendez vous client en cours */
 const rappel = async (db) => {
-     console.log("ca passe ici");
+     // console.log("ca passe ici");
      try {
           let demain = new Date();
           demain.setDate(demain.getDate() + 1); // Incrémente la date d'un jour
 
-          const appointments = await db.collection('appointment').find(
+          const appointments = await db.collection('rendez_vous').find(
                {
                     $expr: {
                          $eq: [
@@ -124,10 +124,11 @@ const rappel = async (db) => {
                     }
 
                }
-          )
+          ).toArray();
 
+          if (appointments == null) return;
           for (appointment of appointments) {
-               appointmentNotification(appointment);
+               appointmentNotification(appointment, db);
           }
      } catch (e) {
           console.error(e);
