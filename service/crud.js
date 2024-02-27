@@ -10,6 +10,7 @@ const dictionary = {
     service: 'service',
     client: 'personne',
     status : 'statut_rendez_vous',
+    type : 'type_personne'
 }
 
 const findAll = (entity, db, object) => {

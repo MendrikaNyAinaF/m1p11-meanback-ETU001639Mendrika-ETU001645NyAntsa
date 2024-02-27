@@ -9,7 +9,9 @@ const { serviceService } = require("../service/service/service");
 const { notificationController } = require("../controller/notification");
 const {expenseController}=require("../controller/expense");
 const {statController}=require("../controller/stat");
-
+const {workTimeStats} = require("../service/work_time");
+const {turnoverService} = require("../service/turnover");
+const {incomeService} = require("../service/income");
 
 const commonRoute = [
     // common routes
@@ -124,6 +126,21 @@ const commonRoute = [
         path:"/stat/appointment/counter",
         method:'get',
         handler:statController.numberOfAppointment
+    },
+    {
+        path: "/stat/worktime",
+        method: 'get',
+        handler: workTimeStats.getWorkTimeByMonths
+    },
+    {
+        path: "/stat/turnover",
+        method: 'get',
+        handler: turnoverService.turnoverPerMonthsAndDays
+    },
+    {
+        path: "/stat/income",
+        method: 'get',
+        handler: incomeService.incomePerMonth
     }
 ]
 exports.commonRoute = () => commonRoute;
