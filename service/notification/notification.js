@@ -2,6 +2,7 @@ const { sendError } = require("../../utilities/response");
 const { appointmentServiceCrud } = require("../appointment/appointment");
 const { adminService } = require("../admin");
 const { emailSender } = require("./emailSender");
+const { ObjectId } = require('mongodb');
 
 const insertNotification = async (notification, db) => {
      return db.collection('notification').insertOne(notification);
@@ -72,7 +73,7 @@ const specialOfferNotification = async (specialOffer, db) => {
           if (type_notification == null) sendError(res, 'Type notification not found', 404);
 
           const notification = {
-               contenu: `${specialOffer.description}`,
+               contenu: `Nous avons une offre spécial du ${specialOffer.date_heure_debut} au ${specialOffer.date_heure_fin}. ${specialOffer.description}`,
                client: null,
                date_creation: new Date(),
                type_notification: type_notification,
@@ -107,23 +108,23 @@ const appointmentNotification = async (appointment) => {
 
 
 /**Rappel des rendez vous client en cours */
-const rappel=async(db) => {
+const rappel = async (db) => {
      console.log("ca passe ici");
      try {
           let demain = new Date();
           demain.setDate(demain.getDate() + 1); // Incrémente la date d'un jour
 
-          const appointments=await db.collection('appointment').find(
+          const appointments = await db.collection('appointment').find(
                {
-                         $expr: {
-                              $eq: [
-                                   { $dateToString: { format: "%Y-%m-%d", date: "$date_heure_debut" } },
-                                   { $dateToString: { format: "%Y-%m-%d", date: demain } }
-                              ]
-                         }
-                    
+                    $expr: {
+                         $eq: [
+                              { $dateToString: { format: "%Y-%m-%d", date: "$date_heure_debut" } },
+                              { $dateToString: { format: "%Y-%m-%d", date: demain } }
+                         ]
+                    }
+
                }
-          ).toArray();
+          )
 
           for (appointment of appointments) {
                appointmentNotification(appointment);
