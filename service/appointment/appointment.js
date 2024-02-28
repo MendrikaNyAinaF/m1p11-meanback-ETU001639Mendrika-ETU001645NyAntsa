@@ -1,11 +1,11 @@
-const { convertObjectId } = require("../../utilities/objectId");
-const { convertToDate } = require("../../utilities/date");
-const { ObjectId } = require('mongodb');
-const { sendError } = require("../../utilities/response");
-const { ignore } = require("nodemon/lib/rules");
-const { crud } = require('../../service/crud')
-const { search_pattern } = require("../../pattern/employeeAppointmentAvailability");
-const { search_pattern_update } = require("../../pattern/employeeAppointmentAvalaibilityUpdate");
+const {convertObjectId} = require("../../utilities/objectId");
+const {convertToDate} = require("../../utilities/date");
+const {ObjectId} = require('mongodb');
+const {sendError} = require("../../utilities/response");
+const {ignore} = require("nodemon/lib/rules");
+const {crud} = require('../../service/crud')
+const {search_pattern} = require("../../pattern/employeeAppointmentAvailability");
+const {search_pattern_update} = require("../../pattern/employeeAppointmentAvalaibilityUpdate");
 
 
 let selectedEmployees = [];
@@ -91,8 +91,8 @@ const create = async (req, res) => {
                 });
             }
         ).catch(error => {
-            sendError(res, error, 500)
-        }
+                sendError(res, error, 500)
+            }
         )
     } catch (e) {
         console.log('Error:', e)
@@ -110,6 +110,19 @@ const getAvailableEmployee = async (date_heure_debut, enddate, db, avoidHimself 
     for (let client of clients) {
         detail.employee = client._id;
         let detail_rendez_vous = await db.collection('detail_rendez_vous').find(avoidHimself === false ? search_pattern(date_heure_debut, enddate, detail) : search_pattern_update(date_heure_debut, enddate, detail, rendez_vous_id)).toArray()
+
+        // get the latest work time of the employee
+        let horaire_travail = await db.collection('horaire_travail').find({employee: client._id}).sort({date_debut: -1}).limit(1).toArray()
+        if (horaire_travail.length === 0) {
+            return null;
+        }
+
+        let date_debut = new Date(horaire_travail[0].date_debut);
+        let date_fin = new Date(horaire_travail[0].date_fin);
+        if (date_heure_debut < date_debut || enddate > date_fin) {
+            return null;
+        }
+
         if (detail_rendez_vous.length === 0 && selectedEmployees.indexOf(client._id) === -1) {
             selectedEmployees.push(client._id);
             return client._id;
@@ -136,6 +149,13 @@ const getAvailability = async (detail, date_heure_debut, db, avoidHimself = fals
         throw new Error('Not available')
     }
 
+    // check if there is a special offer on the dates and for the service
+    let special_offer = await db.collection('offre_speciale').findOne({
+        service: detail.service,
+        date_debut: {"$lte": date_heure_debut},
+        date_fin: {"$gte": date_heure_debut}
+    })
+
     let appointment = {
         date_heure_debut: date_heure_debut,
         date_heure_fin: enddate,
@@ -144,7 +164,11 @@ const getAvailability = async (detail, date_heure_debut, db, avoidHimself = fals
         prix: service.prix,
     }
 
-    // check if date_heure_debut and date_heure_fin are not in the weekend
+    if (special_offer !== null) {
+        appointment.prix = appointment.prix - (appointment.prix * special_offer.remise / 100)
+    }
+
+// check if date_heure_debut and date_heure_fin are not in the weekend
     if (date_heure_debut.getDay() === 0 || date_heure_debut.getDay() === 6) {
         throw new Error('Weekend')
     }
@@ -204,7 +228,7 @@ const update = async (req, res) => {
                 })
 
                 // delete all details of the appointment
-                await req.db.collection('detail_rendez_vous').deleteMany({ rendez_vous: new ObjectId(id) })
+                await req.db.collection('detail_rendez_vous').deleteMany({rendez_vous: new ObjectId(id)})
                 // insert the new details
                 await req.db.collection('detail_rendez_vous').insertMany(appointmentsDetails)
 
@@ -216,8 +240,8 @@ const update = async (req, res) => {
                 });
             }
         ).catch(error => {
-            throw error
-        }
+                throw error
+            }
         )
     } catch (e) {
         console.log('Error:', e)
@@ -242,10 +266,10 @@ const findAllAppointmentForEmployee = async (req, res) => {
     //     check if has value
     if (rendez_vous_details === undefined && rendez_vous_details === null && rendez_vous_details.length === 0) {
         res.send({
-            code: 404,
-            message: "No appointment found",
-            data: []
-        }
+                code: 404,
+                message: "No appointment found",
+                data: []
+            }
         )
     }
 
@@ -263,10 +287,10 @@ const findAllAppointmentForEmployee = async (req, res) => {
     const referencedObject = await crud.addObjectReferenced(rendez_vous_details, req.db)
 
     res.send({
-        code: 200,
-        message: "Appointments found",
-        data: referencedObject
-    }
+            code: 200,
+            message: "Appointments found",
+            data: referencedObject
+        }
     )
 }
 
@@ -360,10 +384,10 @@ const findAllAppointmentForEmployee = async (req, res) => {
 // }
 
 const findById = (id, db) => {
-    return db.collection('rendez_vous').findOne({ _id: new ObjectId(id) }).then(async (result) => {
+    return db.collection('rendez_vous').findOne({_id: new ObjectId(id)}).then(async (result) => {
         if (result == null) return null;
-        const client=await db.collection('personne').findOne({_id:new ObjectId(result.client)})
-        result.client=client;
+        const client = await db.collection('personne').findOne({_id: new ObjectId(result.client)})
+        result.client = client;
         const services = await db.collection('detail_rendez_vous').aggregate([
             {
                 $match: {
