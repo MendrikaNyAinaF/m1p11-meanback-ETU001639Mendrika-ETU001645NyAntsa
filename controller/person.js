@@ -12,7 +12,17 @@ const register = (req, res) => {
     user.password = hashedPassword;
 
     user = convertObjectId(user)
+
+    // check user
     // console.log('user: ', user)
+    // check that the user has 18 years old
+    const date = new Date(user.date_naissance);
+    const now = new Date();
+    let age = now.getFullYear() - date.getFullYear();
+    if(now.getMonth() < date.getMonth() || (now.getMonth() === date.getMonth() && now.getDate() < date.getDate())) age--;
+    if (age < 18) {
+        res.send({ code: 500, message: "You must be 18 years old to register" })
+    }
 
     const db = req.db;
     db.collection('personne').insertOne(user).then(result => {
