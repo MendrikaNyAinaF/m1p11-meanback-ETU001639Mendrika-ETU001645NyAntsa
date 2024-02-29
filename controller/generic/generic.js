@@ -1,6 +1,7 @@
 const {ObjectId} = require("mongodb");
 const {sendError} = require('../../utilities/response')
 const {crud} = require('../../service/crud')
+const bcrypt = require('bcrypt')
 const findAll = async (req, res) => {
     checkEntity(req, res)
     const db = req.db
@@ -15,7 +16,6 @@ const findAll = async (req, res) => {
         //     do nothing
         criteria= req.body
     }
-
 
     const data = await crud.findAll(req.entity, db, criteria);
     res.send({
@@ -41,7 +41,12 @@ const findOne = async (req, res) => {
 
 const create = (req, res) => {
     checkEntity(req, res)
-    crud.create(req.entity, req.db, req.body).then(result => {
+    const body = req.body
+    // if body contains property password then hash it
+    if (body.password !== undefined) {
+        body.password = bcrypt.hashSync(body.password, 10)
+    }
+    crud.create(req.entity, req.db, body).then(result => {
         // newly created object
         let object = result.ops[0]
         res.send(object)
@@ -52,7 +57,14 @@ const create = (req, res) => {
 const update = (req, res) => {
     checkEntity(req, res)
     let id = req.params[0]
-    crud.update(req.entity, req.db, req.body, id).then(result => {
+
+    const body = req.body
+    // if body contains property password then hash it
+    if (body.password !== undefined) {
+        body.password = bcrypt.hashSync(body.password, 10)
+    }
+
+    crud.update(req.entity, req.db, body, id).then(result => {
             // newly created object
             result == null || result.value === null ? sendError(res, 'No document found', 500) :
                 res.send(result.value)

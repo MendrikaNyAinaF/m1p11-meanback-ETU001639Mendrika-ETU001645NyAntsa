@@ -276,7 +276,7 @@ const findAllAppointmentForEmployee = async (req, res) => {
     for (let rendez_vous_detail of rendez_vous_details) {
         let rendez_vous = await crud.findOne("rendez_vous", req.db, rendez_vous_detail.rendez_vous)
         // console.log('rendez_vous', rendez_vous)
-        if (rendez_vous !== null && rendez_vous._id === new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")) {
+        if (rendez_vous !== null && rendez_vous._id === new ObjectId("65c23da33fe8b2bd4b8f7e0f")) {
             //     delete the rendez_vous_detail from the list
             rendez_vous_details.splice(rendez_vous_details.indexOf(rendez_vous_detail), 1)
         } else {

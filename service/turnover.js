@@ -23,7 +23,7 @@ const computeTurnover = async (rendez_vous_detail_coll, employeeId, startDate, e
         },
         {
             $match: {
-                "rendezVousDetails.status": new ObjectId("65c23d5d3fe8b2bd4b8f7e0c")
+                "rendezVousDetails.status": new ObjectId("65c23da33fe8b2bd4b8f7e0f")
             }
         },
         {
